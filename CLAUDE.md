@@ -1,6 +1,6 @@
 # CLAUDE.md — Project context
 
-> **Read `vault/Home.md` first.** The Obsidian vault at [`vault/`](vault/Home.md) is the
+> **Read `spell-checker-vault/Home.md` first.** The Obsidian vault at [`spell-checker-vault/`](spell-checker-vault/Home.md) is the
 > single source of truth for this project — ideas, decisions, problems, designs, and findings
 > all live there. This file is just the quick orientation.
 
@@ -27,7 +27,7 @@ paste into ChatGPT with a fixed prompt → copy the result back. This app takes 
    - small exercises for the most frequent mistake topics,
    - a personal dictionary of frequent typing/spelling mistakes.
 
-## Tech decisions (locked in — see `vault/Decisions/`)
+## Tech decisions (locked in — see `spell-checker-vault/Decisions/`)
 
 | Area            | Decision                                                                 |
 |-----------------|--------------------------------------------------------------------------|
@@ -42,10 +42,10 @@ paste into ChatGPT with a fixed prompt → copy the result back. This app takes 
 
 - **Incremental.** One small, self-contained slice per session.
 - **Verify before moving on.** Every slice must be demonstrably working before the next starts.
-- **Vault as the second brain.** Capture ideas, decisions, problems, and findings in `vault/`
+- **Vault as the second brain.** Capture ideas, decisions, problems, and findings in `spell-checker-vault/`
   as we go. When something non-obvious is decided or discovered, write it down there.
 
-See `vault/Roadmap.md` for the phased plan and current status.
+See `spell-checker-vault/Roadmap.md` for the phased plan and current status.
 
 ## The polish prompt (verbatim — do not paraphrase)
 

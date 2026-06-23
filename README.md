@@ -13,9 +13,9 @@ Two pillars:
 ## Where the knowledge lives
 
 Project knowledge — vision, decisions, designs, problems, and findings — lives in an
-**Obsidian vault** at [`vault/`](vault/Home.md). Open that folder as a vault in Obsidian, or
-start at `vault/Home.md`. See [`CLAUDE.md`](CLAUDE.md) for a quick orientation.
+**Obsidian vault** at [`spell-checker-vault/`](spell-checker-vault/Home.md). Open that folder as a vault in Obsidian, or
+start at `spell-checker-vault/Home.md`. See [`CLAUDE.md`](CLAUDE.md) for a quick orientation.
 
 ## Status
 
-Early. Phase 0 (foundation) only — see `vault/Roadmap.md`.
+Early. Phase 0 (foundation) only — see `spell-checker-vault/Roadmap.md`.

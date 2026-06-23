@@ -4,11 +4,15 @@
 .LSOverride
 Icon?
 
-# Obsidian — keep notes & graph, ignore volatile per-machine workspace state
-.obsidian/workspace.json
-.obsidian/workspace-mobile.json
-.obsidian/cache
-.trash/
+# Obsidian — keep notes, graph & shared config; ignore volatile per-machine state.
+# Patterns are depth-agnostic so they match the nested vault folder.
+**/.obsidian/workspace.json
+**/.obsidian/workspace-mobile.json
+**/.obsidian/cache/
+**/.trash/
+
+# JetBrains IDEs
+.idea/
 
 # Swift Package Manager
 .build/

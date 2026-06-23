@@ -10,7 +10,7 @@ both the developer and the assistant across many sessions.
 
 ## Decision
 
-Keep an **Obsidian vault at `vault/`** in the repo as the **single source of truth**. Both the
+Keep an **Obsidian vault at `spell-checker-vault/`** in the repo as the **single source of truth**. Both the
 developer and the assistant use it as a shared "second brain." This overrides any default of
 storing specs elsewhere (e.g. `docs/superpowers/specs/`).
 
