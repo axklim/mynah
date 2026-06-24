@@ -14,6 +14,14 @@ manual and breaks flow: write → paste into ChatGPT with a fixed prompt → cop
 Take over that loop inside a fast, native macOS app — **and** turn the corrections into a
 gentle, long-term learning system so the same mistakes stop recurring.
 
+## Readiness check (traffic light)
+
+Before (or instead of) rewriting, the app can answer a simpler question first: *is this message
+ready to send?* It returns **one** verdict and nothing else — 🟢 green (clear, send as is),
+🟡 yellow (understandable but worth fixing), 🔴 red (a reader might misunderstand). Red is
+**comprehension-only**: grammar slips alone stay yellow as long as the meaning is clear. See
+[[traffic-light-eval]]. This shipped first as the `cli/` prototype ([[Roadmap]] Phase 1).
+
 ## Pillar 1 — Polish loop (daily, fast)
 
 **Trigger:** a global hotkey from anywhere → a small popup window appears.
@@ -58,5 +66,7 @@ mistakes (grammar topic, spelling/typo, word choice, tone, etc.). See [[feedback
 
 - **Native & fast.** Swift/SwiftUI, menu bar resident, instant popup.
 - **Private by default.** Message text is sensitive; store locally, be explicit that polish
-  requests are sent to Anthropic. (See Privacy in [[open-questions]].)
+  requests are sent to Anthropic. (See Privacy in [[open-questions]].) The CLI prototype routes
+  text through the local authenticated `claude` CLI rather than a direct API key, but it still
+  leaves the device for the model ([[0006-polish-backend-claude-cli]]).
 - **Incremental.** Each capability ships as its own verifiable slice ([[Roadmap]]).

@@ -10,10 +10,15 @@ that delivered them.
   CLAUDE.md, this vault, roadmap, and decision records. No app code. Verify by opening the
   vault in Obsidian.
 
-- [ ] **Phase 1 — CLI polish prototype** *(no Xcode needed)*
-  A `swift` command-line program: read text from stdin/arg → call Claude with the
-  [[polish-prompt]] → print one revised version. Verifies the LLM core end-to-end from the
-  terminal. Needs an Anthropic API key (env var). De-risks everything before any GUI.
+- [x] **Phase 1 — CLI evaluator prototype (traffic light)** *(no Xcode needed,
+  [[2026-06-23-session-02-cli-prototype]] · [[2026-06-24-session-03-traffic-light-evaluator]])*
+  A `swift` command-line program in `cli/`, installed as `spell-checker` via `make install`:
+  `spell-checker check <text>` (or stdin) → return **one** verdict 🔴 / 🟡 / 🟢
+  ([[traffic-light-eval]]), no rewrite. **Comprehension-only red.** Backend
+  is `claude -p --model sonnet` behind a `TextEvaluator` abstraction
+  ([[0006-polish-backend-claude-cli]] · [[0007-traffic-light-evaluator-first]]) — **no API key
+  needed**. Verified: clear → 🟢, error-heavy-but-clear → 🟡, ambiguous → 🔴.
+  *(The polish/rewrite loop, pillar 1, is deferred to Phase 3.)*
 
 - [ ] **Phase 2 — Menu bar shell + global hotkey** *(needs Xcode)*
   Status-item app that lives in the menu bar; a global hotkey opens an (empty) popup window.

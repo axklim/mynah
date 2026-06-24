@@ -31,12 +31,26 @@ paste into ChatGPT with a fixed prompt → copy the result back. This app takes 
 
 | Area            | Decision                                                                 |
 |-----------------|--------------------------------------------------------------------------|
-| LLM             | Anthropic Claude — Haiku for polishing, a stronger model for analysis    |
+| LLM             | Anthropic Claude — Haiku for polishing; Sonnet for evaluation/analysis (Haiku under-detected ambiguity — see Findings) |
 | Invocation      | Menu bar app + global hotkey → popup; larger window for the dashboard    |
 | Language / UI   | Swift 6 / SwiftUI + AppKit                                               |
-| Build toolchain | Xcode (to be installed later); until then, only `swift` CLT work         |
-| Secrets         | API key in macOS Keychain (GUI) / env var (CLI prototype)                |
+| Build toolchain | Xcode later (for the GUI); the CLI prototype builds now with `swift` CLT via `make` |
+| Secrets         | Keychain (future GUI). The CLI evaluator needs no API key — it shells out to an authed `claude -p` (Decision 0006) |
 | Storage         | Local, on-device (message text is sensitive — see Privacy in vault)      |
+
+## Building & running (CLI prototype)
+
+The first slice lives in `cli/` (a SwiftPM package). The binary is `spell-checker`; the
+target/module is `SpellChecker` (binary names can't contain a hyphen — see `cli/Package.swift`).
+
+- `make install` — build release + install `spell-checker` to `~/.local/bin` (override `PREFIX=…`)
+- `make build` / `make uninstall` / `make clean`; bare `make` prints the target list
+- Dev without installing: `cd cli && swift run spell-checker check "some text"`
+- Run it: `spell-checker check "<text>"` (or `pbpaste | spell-checker check`) → one verdict 🔴/🟡/🟢
+
+The LLM call sits behind a `TextEvaluator` protocol (one swap point in `main.swift`); today
+`ClaudeCLIEvaluator` shells out to `claude -p`, so a litellm/Gemini backend can conform later
+without touching the rest.
 
 ## Development philosophy
 

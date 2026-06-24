@@ -14,6 +14,9 @@ Icon?
 # JetBrains IDEs
 .idea/
 
+# Claude Code — local agent state (not project source)
+.claude/agent-memory/
+
 # Swift Package Manager
 .build/
 .swiftpm/

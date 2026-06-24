@@ -21,7 +21,8 @@ and learns from their recurring mistakes to teach better English over time. Full
 - 📜 [[Spec]] — the living product spec
 - 🗺️ [[Roadmap]] — phased, incremental plan + current status
 - 🧠 **Design**
-  - [[polish-prompt]] — the exact prompt and tuning notes
+  - [[traffic-light-eval]] — the evaluator's 🔴/🟡/🟢 criteria + prompt (first prototype)
+  - [[polish-prompt]] — the exact polish prompt and tuning notes (pillar 1, later)
   - [[feedback-system]] — how mistakes are captured, categorized, and taught
   - [[data-model]] — how mistake events & typos are stored
 - ✅ **Decisions** (ADR-style)
@@ -30,10 +31,13 @@ and learns from their recurring mistakes to teach better English over time. Full
   - [[0003-build-toolchain-xcode-later]]
   - [[0004-incremental-foundation-first]]
   - [[0005-obsidian-vault-as-source-of-truth]]
+  - [[0006-polish-backend-claude-cli]]
+  - [[0007-traffic-light-evaluator-first]]
 - ❓ [[open-questions]] — unresolved decisions
 - 💡 [[inbox]] — quick idea capture
 - 🔎 [[toolchain-notes]] — environment findings
-- 📓 **Sessions** — [[2026-06-23-session-01-foundation]]
+- 🧪 **Findings** — [[haiku-misses-ambiguity]]
+- 📓 **Sessions** — [[2026-06-23-session-01-foundation]] · [[2026-06-23-session-02-cli-prototype]] · [[2026-06-24-session-03-traffic-light-evaluator]]
 
 ## How to use this vault
 
