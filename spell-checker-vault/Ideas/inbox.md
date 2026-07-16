@@ -17,6 +17,10 @@ Quick capture. Drop half-formed ideas here without ceremony; promote the good on
   better sources later: the **current selection** (no copy step), or a **typed-in popup** where
   the user pastes/edits before checking. The popup also unlocks pillar 1 (the rewrite/polish
   loop). See the input TODO in [[phase2-menubar-evaluator]].
+- **Sort out `Ideas/Draft.md`** — it holds raw personal drafts/notes (vault naming, session-start
+  behaviour, where notes/todos should live). Review them, promote anything worth keeping into
+  [[Spec]], [[Roadmap]], a Design note, or a proper inbox item above, then trim the file.
+  Requested 2026-07-16.
 
 ## Promoted / parked
 

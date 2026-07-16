@@ -30,6 +30,17 @@ that delivered them.
   *(Reshaped from the original "hotkey opens an empty popup" — we pipe a real verdict into the
   icon instead; the rewrite/polish loop stays in Phase 3.)*
 
+> **Distribution track (do before Phase 3).** Get the project onto a public remote and
+> installable before adding more features — requested 2026-07-16.
+
+- [ ] **Phase 2.1 — Publish to GitHub**
+  Create the GitHub repository and push `main`. This is the prerequisite for the Homebrew tap in
+  [[Roadmap|Phase 2.2]] (the formula points at a GitHub repo/release).
+
+- [ ] **Phase 2.2 — Distribute via Homebrew**
+  Ship `spell-checker` (and, if practical, the menu-bar app) through a Homebrew tap/formula so it
+  installs with `brew install`. Depends on Phase 2.1.
+
 - [ ] **Phase 3 — Wire the polish loop into the GUI**
   Input → Claude → one revised version → copy back. Implement the **"use my original / skip"**
   path. API key stored in Keychain via a settings screen.
