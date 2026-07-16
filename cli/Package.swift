@@ -5,13 +5,35 @@ let package = Package(
     name: "SpellChecker",
     platforms: [.macOS(.v13)],
     products: [
-        // Binary name is hyphenated; the target/module name can't be, hence the split.
-        .executable(name: "spell-checker", targets: ["SpellChecker"])
+        // Binary names are hyphenated; target/module names can't be, hence the split.
+        .executable(name: "spell-checker", targets: ["SpellChecker"]),
+        .executable(name: "spell-checker-bar", targets: ["SpellCheckerBar"])
+    ],
+    dependencies: [
+        .package(url: "https://github.com/sindresorhus/KeyboardShortcuts", from: "1.9.0")
     ],
     targets: [
+        .target(
+            name: "SpellCheckerCore",
+            path: "Sources/SpellCheckerCore"
+        ),
         .executableTarget(
             name: "SpellChecker",
+            dependencies: ["SpellCheckerCore"],
             path: "Sources/SpellChecker"
+        ),
+        .executableTarget(
+            name: "SpellCheckerBar",
+            dependencies: [
+                "SpellCheckerCore",
+                .product(name: "KeyboardShortcuts", package: "KeyboardShortcuts"),
+            ],
+            path: "Sources/SpellCheckerBar"
+        ),
+        .testTarget(
+            name: "SpellCheckerCoreTests",
+            dependencies: ["SpellCheckerCore"],
+            path: "Tests/SpellCheckerCoreTests"
         )
     ]
 )

@@ -1,4 +1,5 @@
 import Foundation
+import SpellCheckerCore
 
 let usage = """
 spell-checker — evaluate whether a message reads clearly.

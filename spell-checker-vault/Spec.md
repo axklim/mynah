@@ -20,7 +20,8 @@ Before (or instead of) rewriting, the app can answer a simpler question first: *
 ready to send?* It returns **one** verdict and nothing else — 🟢 green (clear, send as is),
 🟡 yellow (understandable but worth fixing), 🔴 red (a reader might misunderstand). Red is
 **comprehension-only**: grammar slips alone stay yellow as long as the meaning is clear. See
-[[traffic-light-eval]]. This shipped first as the `cli/` prototype ([[Roadmap]] Phase 1).
+[[traffic-light-eval]]. This shipped first as the `cli/` prototype ([[Roadmap]] Phase 1), then as
+a menu-bar hotkey (**⌃⌥C** → verdict in the tray icon, [[Roadmap]] Phase 2).
 
 ## Pillar 1 — Polish loop (daily, fast)
 

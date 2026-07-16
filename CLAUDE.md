@@ -34,23 +34,41 @@ paste into ChatGPT with a fixed prompt → copy the result back. This app takes 
 | LLM             | Anthropic Claude — Haiku for polishing; Sonnet for evaluation/analysis (Haiku under-detected ambiguity — see Findings) |
 | Invocation      | Menu bar app + global hotkey → popup; larger window for the dashboard    |
 | Language / UI   | Swift 6 / SwiftUI + AppKit                                               |
-| Build toolchain | Xcode later (for the GUI); the CLI prototype builds now with `swift` CLT via `make` |
+| Build toolchain | `swift` CLT + `make`, no Xcode project — both the CLI and the menu-bar GUI app build this way (`make app`); AppKit/SwiftUI come with the CLT SDK (see Decision 0003) |
 | Secrets         | Keychain (future GUI). The CLI evaluator needs no API key — it shells out to an authed `claude -p` (Decision 0006) |
 | Storage         | Local, on-device (message text is sensitive — see Privacy in vault)      |
 
-## Building & running (CLI prototype)
+## Building & running
 
-The first slice lives in `cli/` (a SwiftPM package). The binary is `spell-checker`; the
-target/module is `SpellChecker` (binary names can't contain a hyphen — see `cli/Package.swift`).
+The code lives in `cli/` (a SwiftPM package) and builds two products (binary names can't contain
+a hyphen, so each has a hyphen-free target/module — see `cli/Package.swift`):
+
+- **`spell-checker`** (target `SpellChecker`) — the CLI evaluator.
+- **`spell-checker-bar`** (target `SpellCheckerBar`) — the Phase 2 menu-bar app.
+
+CLI targets:
 
 - `make install` — build release + install `spell-checker` to `~/.local/bin` (override `PREFIX=…`)
 - `make build` / `make uninstall` / `make clean`; bare `make` prints the target list
 - Dev without installing: `cd cli && swift run spell-checker check "some text"`
 - Run it: `spell-checker check "<text>"` (or `pbpaste | spell-checker check`) → one verdict 🔴/🟡/🟢
 
-The LLM call sits behind a `TextEvaluator` protocol (one swap point in `main.swift`); today
-`ClaudeCLIEvaluator` shells out to `claude -p`, so a litellm/Gemini backend can conform later
-without touching the rest.
+**Menu-bar app (Phase 2).** `spell-checker-bar` is an `LSUIElement` accessory app (no Dock icon):
+the global hotkey **⌃⌥C** (via the `KeyboardShortcuts` package) evaluates the clipboard text and
+shows the 🔴/🟡/🟢 verdict (or ⚠️ / 📋) in the status-item icon for ~4s, then reverts.
+
+- `make app` — build `cli/dist/SpellChecker.app` · `make run-app` — build and open it
+- Dev without bundling: `cd cli && swift run spell-checker-bar`
+
+Both products share **`SpellCheckerCore`** (`Sources/SpellCheckerCore/`), which holds the
+`TextEvaluator` protocol, `Verdict`, `IconState`, and `ClaudeCLIEvaluator` — that's the single
+backend-swap point. Today `ClaudeCLIEvaluator` shells out to `claude -p`, so a litellm/Gemini
+backend can conform later without touching the CLI or the app.
+
+Note: a Finder-launched `.app` doesn't inherit the shell `PATH`, so the evaluator resolves
+`claude`'s absolute path (`resolveClaudeURL`) and runs it in an empty app-private working dir
+(`Application Support/SpellChecker/claude-cwd`) so surrounding files never leak into a verdict —
+see the vault Finding *gui-claude-subprocess-tcc-prompt*.
 
 ## Development philosophy
 

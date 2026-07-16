@@ -20,9 +20,15 @@ that delivered them.
   needed**. Verified: clear → 🟢, error-heavy-but-clear → 🟡, ambiguous → 🔴.
   *(The polish/rewrite loop, pillar 1, is deferred to Phase 3.)*
 
-- [ ] **Phase 2 — Menu bar shell + global hotkey** *(needs Xcode)*
-  Status-item app that lives in the menu bar; a global hotkey opens an (empty) popup window.
-  Verify: hotkey shows/hides the popup reliably.
+- [x] **Phase 2 — Menu-bar evaluator (hotkey → verdict in the tray icon)**
+  *(design: [[phase2-menubar-evaluator]] · [[2026-06-25-session-04-menubar-evaluator]])*
+  Status-item app; **⌃⌥C** runs the [[traffic-light-eval|evaluator]] on the **clipboard** text and
+  shows 🟢/🟡/🔴 (or ⚠️) in the icon for ~4s, then reverts. **No popup window** — the icon is the UI.
+  Built with **SwiftPM + `make`**, no Xcode project (GUI frameworks ship with the CLT SDK —
+  [[0003-build-toolchain-xcode-later]]). Reuses the evaluator via a shared `SpellCheckerCore`
+  library. Verify: the flow works end-to-end (see the design's verification list).
+  *(Reshaped from the original "hotkey opens an empty popup" — we pipe a real verdict into the
+  icon instead; the rewrite/polish loop stays in Phase 3.)*
 
 - [ ] **Phase 3 — Wire the polish loop into the GUI**
   Input → Claude → one revised version → copy back. Implement the **"use my original / skip"**

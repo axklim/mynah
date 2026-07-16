@@ -1,4 +1,4 @@
-# spell-checker — CLI evaluator (Phase 1)
+# spell-checker — CLI evaluator + menu-bar app
 
 Evaluates a message and returns **one** traffic-light verdict — 🔴 / 🟡 / 🟢 — and nothing else.
 It does not rewrite the text.
@@ -51,6 +51,21 @@ Prints just the verdict to stdout; errors go to stderr with a non-zero exit code
 ```sh
 cd cli && swift run spell-checker check "some text"
 ```
+
+## Menu-bar app (Phase 2)
+
+A menu-bar app wraps the same evaluator. Press **⌃⌥C** (Control+Option+C) to evaluate whatever
+is on the clipboard; the tray icon shows the verdict for ~4s, then reverts:
+
+⚪ idle · ⏳ checking · 🟢 / 🟡 / 🔴 verdict · 📋 clipboard empty · ⚠️ error
+
+```sh
+make app        # build dist/SpellChecker.app
+make run-app    # build and open it
+```
+
+It's an accessory app (no Dock icon) and quits from its menu. The shortcut is hardcoded for now;
+a rebind UI is planned (see the vault inbox). Dev run without bundling: `cd cli && swift run spell-checker-bar`.
 
 ## Swapping the backend later
 

@@ -21,6 +21,7 @@ Icon?
 .build/
 .swiftpm/
 Package.resolved
+dist/
 
 # Xcode
 DerivedData/

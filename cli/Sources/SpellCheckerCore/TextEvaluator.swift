@@ -1,21 +1,3 @@
-import Foundation
-
-/// A traffic-light verdict on a piece of text.
-///
-/// red vs. yellow is a *comprehension* line: red means a reader might
-/// misunderstand; yellow means they'll understand but it reads non-native.
-enum Verdict: String {
-    case red, yellow, green
-
-    var display: String {
-        switch self {
-        case .red:    return "🔴 red"
-        case .yellow: return "🟡 yellow"
-        case .green:  return "🟢 green"
-        }
-    }
-}
-
 /// The evaluation instruction. The user's message is appended after it.
 /// Keep the criteria here in sync with the vault note Design/traffic-light-eval.
 let evaluationPrompt = """
@@ -44,7 +26,7 @@ struct EvaluationError: Error, CustomStringConvertible {
 ///
 /// Today: `ClaudeCLIEvaluator` (shells out to `claude -p`). Later: a litellm /
 /// Gemini backend conforms to the same protocol — see Decision 0006.
-protocol TextEvaluator {
+public protocol TextEvaluator: Sendable {
     /// Returns a single traffic-light verdict for `text`.
     func evaluate(_ text: String) throws -> Verdict
 }

@@ -27,8 +27,10 @@ Unresolved decisions and things to confirm. Move resolved ones into a `Decisions
 
 ## Build
 
-- When Xcode is installed: project as **Xcode `.xcodeproj`** vs. **SwiftPM-built `.app`**?
-  (Revisit [[0003-build-toolchain-xcode-later]].)
+- ~~When Xcode is installed: project as **Xcode `.xcodeproj`** vs. **SwiftPM-built `.app`**?~~
+  **Resolved (2026-06-24):** SwiftPM + `make`, hand-assembled `.app` — no Xcode project. The GUI
+  frameworks (AppKit, SwiftUI, Carbon) ship with the CLT SDK, so the build never depends on Xcode.
+  See [[phase2-menubar-evaluator]] and [[0003-build-toolchain-xcode-later]].
 
 ## Related
 

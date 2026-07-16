@@ -22,6 +22,7 @@ and learns from their recurring mistakes to teach better English over time. Full
 - 🗺️ [[Roadmap]] — phased, incremental plan + current status
 - 🧠 **Design**
   - [[traffic-light-eval]] — the evaluator's 🔴/🟡/🟢 criteria + prompt (first prototype)
+  - [[phase2-menubar-evaluator]] — Phase 2 design: hotkey → verdict in the menu-bar icon
   - [[polish-prompt]] — the exact polish prompt and tuning notes (pillar 1, later)
   - [[feedback-system]] — how mistakes are captured, categorized, and taught
   - [[data-model]] — how mistake events & typos are stored
@@ -36,8 +37,8 @@ and learns from their recurring mistakes to teach better English over time. Full
 - ❓ [[open-questions]] — unresolved decisions
 - 💡 [[inbox]] — quick idea capture
 - 🔎 [[toolchain-notes]] — environment findings
-- 🧪 **Findings** — [[haiku-misses-ambiguity]]
-- 📓 **Sessions** — [[2026-06-23-session-01-foundation]] · [[2026-06-23-session-02-cli-prototype]] · [[2026-06-24-session-03-traffic-light-evaluator]]
+- 🧪 **Findings** — [[haiku-misses-ambiguity]] · [[gui-claude-subprocess-tcc-prompt]]
+- 📓 **Sessions** — [[2026-06-23-session-01-foundation]] · [[2026-06-23-session-02-cli-prototype]] · [[2026-06-24-session-03-traffic-light-evaluator]] · [[2026-06-25-session-04-menubar-evaluator]]
 
 ## How to use this vault
 

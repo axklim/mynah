@@ -47,6 +47,21 @@ Separately, the longer-term plan is to route through **litellm** so the backend 
   protocol is now `TextEvaluator` (was `PolishProvider`) and the default model is `sonnet` — see
   [[0007-traffic-light-evaluator-first]]. The `claude -p` backend mechanism is unchanged.
 
+## Update (2026-06-25) — PATH resolution for GUI launch
+
+A GUI `.app` launched from Finder does **not** inherit the interactive shell `PATH`, so
+`claude` (typically in `~/.local/bin` or Homebrew) is invisible to the default
+`/usr/bin:/bin:/usr/sbin:/sbin` search path and the shell-out fails silently.
+
+**What shipped:** `ClaudeCLIEvaluator.resolveClaudeURL()` probes the known install locations
+(`~/.local/bin/claude`, `/opt/homebrew/bin/claude`, `/usr/local/bin/claude`) and returns the
+first executable it finds. If none match, it falls back to `/usr/bin/env claude`, which still
+resolves correctly for terminal runs where `PATH` is inherited. See [[phase2-menubar-evaluator]]
+for the full design note.
+
+A login-shell probe (`/bin/zsh -lc 'command -v claude'`) was considered but not shipped; it
+remains a possible future fallback for non-standard installs.
+
 ## Related
 
 [[0001-llm-provider-claude]] · [[polish-prompt]] · [[Roadmap]] · [[Spec]]

@@ -3,8 +3,12 @@ PREFIX ?= $(HOME)/.local
 BINDIR := $(PREFIX)/bin
 PKGDIR := cli
 BIN    := spell-checker
+APP    := SpellChecker
+APPBIN := spell-checker-bar
+APPDIR := $(PKGDIR)/dist/$(APP).app
+PLIST  := $(PKGDIR)/packaging/Info.plist
 
-.PHONY: help build install uninstall clean
+.PHONY: help build install uninstall clean app run-app
 .DEFAULT_GOAL := help
 
 help:
@@ -13,6 +17,8 @@ help:
 	@echo "  make build       build the release binary (no install)"
 	@echo "  make uninstall   remove the installed binary"
 	@echo "  make clean       remove build artifacts"
+	@echo "  make app         build the menu-bar app bundle (dist/SpellChecker.app)"
+	@echo "  make run-app     build the app bundle and open it"
 
 build:
 	cd $(PKGDIR) && swift build -c release
@@ -33,5 +39,21 @@ uninstall:
 	rm -f $(BINDIR)/$(BIN)
 	@echo "removed $(BINDIR)/$(BIN)"
 
+app: ## build the menu-bar app bundle (dist/SpellChecker.app)
+	cd $(PKGDIR) && swift build -c release --product $(APPBIN)
+	rm -rf $(APPDIR)
+	mkdir -p $(APPDIR)/Contents/MacOS
+	cp $(PKGDIR)/.build/release/$(APPBIN) $(APPDIR)/Contents/MacOS/$(APP)
+	cp $(PLIST) $(APPDIR)/Contents/Info.plist
+	codesign --force --sign - $(APPDIR)
+	@echo ""
+	@echo "✅ built $(APPDIR)"
+	@echo "   open it:  make run-app   (or double-click in Finder)"
+	@echo "   hotkey:   ⌃⌥C checks the clipboard"
+
+run-app: app
+	open $(APPDIR)
+
 clean:
 	cd $(PKGDIR) && swift package clean
+	rm -rf $(APPDIR)

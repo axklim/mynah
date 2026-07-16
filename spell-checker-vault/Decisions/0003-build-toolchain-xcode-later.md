@@ -27,6 +27,17 @@ Until it's installed, only do work that is verifiable with the existing CLT `swi
 - **Phase 2+** (the GUI) are blocked until Xcode is installed.
 - When ready: install Xcode from the App Store, then `sudo xcode-select -s` to point at it.
 
+## Update (2026-06-24) — Xcode installed, but the build stays Xcode-free
+
+Xcode 26.5 is now installed and is the active toolchain. **However**, we discovered the GUI
+frameworks we need (AppKit, SwiftUI, Carbon, Cocoa) **already ship with the Command Line Tools
+SDK**, and Swift 6.3 can build a menu-bar `.app` from a SwiftPM package. So for [[Roadmap|Phase
+2]] we chose **SwiftPM + `make` with a hand-assembled `.app`** (`LSUIElement`) over an Xcode
+`.xcodeproj` — keeping the whole project buildable from one `make`, with clean git and no Xcode
+lock-in. Xcode stays available for when we genuinely want previews, asset catalogs, Instruments,
+or App Store distribution; the **build does not depend on it**. See
+[[phase2-menubar-evaluator]].
+
 ## Related
 
-[[Roadmap]] · [[toolchain-notes]] · [[0004-incremental-foundation-first]]
+[[Roadmap]] · [[toolchain-notes]] · [[0004-incremental-foundation-first]] · [[phase2-menubar-evaluator]]
