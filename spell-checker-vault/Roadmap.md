@@ -22,7 +22,7 @@ that delivered them.
 
 - [x] **Phase 2 — Menu-bar evaluator (hotkey → verdict in the tray icon)**
   *(design: [[phase2-menubar-evaluator]] · [[2026-06-25-session-04-menubar-evaluator]])*
-  Status-item app; **⌃⌥C** runs the [[traffic-light-eval|evaluator]] on the **clipboard** text and
+  Status-item app; **⌃⌥C** (rebound to **⌃⌥⌘C** in Phase 2.3) runs the [[traffic-light-eval|evaluator]] on the **clipboard** text and
   shows 🟢/🟡/🔴 (or ⚠️) in the icon for ~4s, then reverts. **No popup window** — the icon is the UI.
   Built with **SwiftPM + `make`**, no Xcode project (GUI frameworks ship with the CLT SDK —
   [[0003-build-toolchain-xcode-later]]). Reuses the evaluator via a shared `SpellCheckerCore`
@@ -40,6 +40,24 @@ that delivered them.
 - [ ] **Phase 2.2 — Distribute via Homebrew**
   Ship `spell-checker` (and, if practical, the menu-bar app) through a Homebrew tap/formula so it
   installs with `brew install`. Depends on Phase 2.1.
+  **Don't forget the font dependency.** The menu-bar icons are Nerd Font glyphs
+  ([[0008-nerd-font-status-icons]]), so the app **cask** should declare
+  `depends_on cask: "font-jetbrains-mono-nerd-font"` — or bundle `SymbolsNerdFont` in
+  `Contents/Resources` and register it at launch, dropping the dependency. Confirm the cask DSL
+  against Homebrew's docs then; a plain **formula** can't depend on a cask, so the CLI stays
+  font-free (it prints emoji). The app falls back to emoji if the font is missing, so a miss here
+  degrades rather than breaks.
+
+- [ ] **Phase 2.3 — Ad-hoc translator (En → Ru)** *(design: [[ad-hoc-translator]])*
+  A second hotkey that translates the clipboard **English → Russian** into a floating window —
+  for understanding what someone wrote *to* you, the mirror of the checker. Rebinds the checker to
+  **Hyper+C** (⌃⌥⌘C); the translator is **Hyper+⇧C** (⌃⌥⌘⇧C). Word input (1–2 words) gets up to 3
+  meanings with simple-English explanations and examples; longer text gets just the translation.
+  Adds the shared input guards the checker never had (no text / over 2000 characters) and swaps the
+  emoji icons for Nerd Font glyphs ([[0008-nerd-font-status-icons]]). Three verifiable slices —
+  guards + icons, then `spell-checker translate`, then the window.
+  *Being built **ahead of** the distribution track above (branch `ad-hoc-translator`, 2026-08-04);
+  numbered after it to keep the phase numbers in order.*
 
 - [ ] **Phase 3 — Wire the polish loop into the GUI**
   Input → Claude → one revised version → copy back. Implement the **"use my original / skip"**

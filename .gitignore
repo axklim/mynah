@@ -30,3 +30,6 @@ DerivedData/
 xcuserdata/
 *.moved-aside
 build/
+
+# Superpowers — SDD scratch (ledger, briefs, review packages)
+.superpowers/

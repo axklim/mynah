@@ -17,6 +17,11 @@ let package = Package(
             name: "SpellCheckerCore",
             path: "Sources/SpellCheckerCore"
         ),
+        .target(
+            name: "SpellCheckerUI",
+            dependencies: ["SpellCheckerCore"],
+            path: "Sources/SpellCheckerUI"
+        ),
         .executableTarget(
             name: "SpellChecker",
             dependencies: ["SpellCheckerCore"],
@@ -26,13 +31,14 @@ let package = Package(
             name: "SpellCheckerBar",
             dependencies: [
                 "SpellCheckerCore",
+                "SpellCheckerUI",
                 .product(name: "KeyboardShortcuts", package: "KeyboardShortcuts"),
             ],
             path: "Sources/SpellCheckerBar"
         ),
         .testTarget(
             name: "SpellCheckerCoreTests",
-            dependencies: ["SpellCheckerCore"],
+            dependencies: ["SpellCheckerCore", "SpellCheckerUI"],
             path: "Tests/SpellCheckerCoreTests"
         )
     ]

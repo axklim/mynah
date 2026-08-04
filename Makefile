@@ -8,13 +8,14 @@ APPBIN := spell-checker-bar
 APPDIR := $(PKGDIR)/dist/$(APP).app
 PLIST  := $(PKGDIR)/packaging/Info.plist
 
-.PHONY: help build install uninstall clean app run-app
+.PHONY: help build test install uninstall clean app run-app
 .DEFAULT_GOAL := help
 
 help:
 	@echo "Targets:"
 	@echo "  make install     build release and install spell-checker to $(BINDIR)"
 	@echo "  make build       build the release binary (no install)"
+	@echo "  make test        run the swift test suite"
 	@echo "  make uninstall   remove the installed binary"
 	@echo "  make clean       remove build artifacts"
 	@echo "  make app         build the menu-bar app bundle (dist/SpellChecker.app)"
@@ -22,6 +23,9 @@ help:
 
 build:
 	cd $(PKGDIR) && swift build -c release
+
+test:
+	cd $(PKGDIR) && swift test
 
 install: build
 	mkdir -p $(BINDIR)
@@ -49,7 +53,7 @@ app: ## build the menu-bar app bundle (dist/SpellChecker.app)
 	@echo ""
 	@echo "✅ built $(APPDIR)"
 	@echo "   open it:  make run-app   (or double-click in Finder)"
-	@echo "   hotkey:   ⌃⌥C checks the clipboard"
+	@echo "   hotkey:   ⌃⌥⌘C (Hyper+C) checks the clipboard"
 
 run-app: app
 	open $(APPDIR)

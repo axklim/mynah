@@ -54,8 +54,11 @@ CLI targets:
 - Run it: `spell-checker check "<text>"` (or `pbpaste | spell-checker check`) → one verdict 🔴/🟡/🟢
 
 **Menu-bar app (Phase 2).** `spell-checker-bar` is an `LSUIElement` accessory app (no Dock icon):
-the global hotkey **⌃⌥C** (via the `KeyboardShortcuts` package) evaluates the clipboard text and
-shows the 🔴/🟡/🟢 verdict (or ⚠️ / 📋) in the status-item icon for ~4s, then reverts.
+the global hotkey **⌃⌥⌘C** (Hyper+C) (via the `KeyboardShortcuts` package) evaluates the clipboard text and
+shows the verdict in the status-item icon for ~4s, then reverts: a green / yellow / red dot, an
+outlined page when the clipboard has no text, a book when the text is over 2000 characters, or a
+warning triangle on failure. The glyphs are JetBrainsMono Nerd Font codepoints tinted via
+`IconTint`; without that font installed the app falls back to emoji.
 
 - `make app` — build `cli/dist/SpellChecker.app` · `make run-app` — build and open it
 - Dev without bundling: `cd cli && swift run spell-checker-bar`

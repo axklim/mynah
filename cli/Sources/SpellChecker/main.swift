@@ -8,6 +8,8 @@ USAGE:
   spell-checker check <text>     Evaluate text; prints one verdict: 🔴 / 🟡 / 🟢
   spell-checker check            Read the text from stdin (e.g. pbpaste | spell-checker check)
   spell-checker --help           Show this help
+
+Input over 2000 characters is rejected as a likely misclick.
 """
 
 func emit(_ text: String, to handle: FileHandle) {
@@ -27,13 +29,24 @@ case "-h", "--help", "help":
 
 case "check":
     let rest = Array(args.dropFirst())
-    let text = (rest.isEmpty
+    let raw = rest.isEmpty
         ? String(decoding: FileHandle.standardInput.readDataToEndOfFile(), as: UTF8.self)
         : rest.joined(separator: " ")
-    ).trimmingCharacters(in: .whitespacesAndNewlines)
 
-    guard !text.isEmpty else {
+    let text: String
+    switch InputText.check(raw) {
+    case .ok(let trimmed):
+        text = trimmed
+    case .noText:
         fail("usage: spell-checker check <text>   (or pipe text via stdin)", code: 2)
+    case .tooLong(let count):
+        fail(
+            """
+            error: input is \(count) characters, limit is \(InputText.characterLimit)
+            That looks like an accidental paste — check what you copied.
+            """,
+            code: 2
+        )
     }
 
     let evaluator: TextEvaluator = ClaudeCLIEvaluator()

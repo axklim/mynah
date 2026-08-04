@@ -1,6 +1,6 @@
 # Design — Phase 2: menu-bar evaluator
 
-The first GUI slice. A menu-bar (system-tray) app where the global hotkey **⌃⌥C** runs the
+The first GUI slice. A menu-bar (system-tray) app where the global hotkey **⌃⌥⌘C** runs the
 existing [[traffic-light-eval|traffic-light evaluator]] on the **clipboard** text and shows the
 verdict **in the tray icon itself**. There is **no popup window** in this slice — the icon is the
 entire UI.
@@ -11,17 +11,17 @@ the first GUI slice. The rewrite/polish loop (pillar 1) stays deferred.
 
 ## User-facing flow
 
-1. **Launch** → an `NSStatusItem` appears in the menu bar showing the **neutral** icon (⚪). The
+1. **Launch** → an `NSStatusItem` appears in the menu bar showing the **neutral** icon (a hollow circle). The
    app is an **accessory** (`LSUIElement` / `.accessory`) — no Dock icon, no main window.
-2. **Press ⌃⌥C** → icon switches to the **working** state (⏳) while the check runs. If a check is
+2. **Press ⌃⌥⌘C** → icon switches to the **working** state (an hourglass) while the check runs. If a check is
    already in flight, the press is **ignored** (see [[concurrent-recheck-while-busy]]).
 3. **Read the text** → from the **clipboard** (`NSPasteboard.general`). Empty/no string is **not
-   an error** — show a distinct **empty** icon (📋) for the same ~4s, then revert. *Richer input
+   an error** — show a distinct **empty** icon (an outlined page) for the same ~4s, then revert. *Richer input
    later — current selection, or a typed-in popup — tracked in [[inbox]] ("Richer text input for
    the evaluator").*
 4. **Evaluate** → run `ClaudeCLIEvaluator` on a background `Task` (shells out to `claude -p`,
    Sonnet). Reuses the existing evaluator unchanged.
-5. **Show the verdict** → icon becomes **🟢 / 🟡 / 🔴** (or **⚠️** on failure) for **~4 seconds**,
+5. **Show the verdict** → icon becomes a **green / yellow / red dot** (or a **warning triangle** on failure) for **~4 seconds**,
    then reverts to the neutral icon.
 
 ## Architecture — one SwiftPM package, three targets
@@ -58,8 +58,8 @@ cli/Package.swift
 
 ### Hotkey
 
-- `KeyboardShortcuts.Name("toggleCheck")` with a baked-in **default of ⌃⌥C**
-  (`.c` + `[.control, .option]`). Handler wired via `KeyboardShortcuts.onKeyDown`.
+- `KeyboardShortcuts.Name("toggleCheck")` with a baked-in **default of ⌃⌥⌘C**
+  (`.c` + `[.control, .option, .command]`). Handler wired via `KeyboardShortcuts.onKeyDown`.
 - `KeyboardShortcuts` is Carbon-backed → **no Accessibility/Input-Monitoring prompt**.
 - A user-rebindable recorder UI is deferred → [[inbox]] ("Shortcut recorder UI"), Phase 3.
 
@@ -68,15 +68,21 @@ cli/Package.swift
 Emoji set as the status-item button **title** (simplest; matches the CLI's traffic-light
 vocabulary). Upgrade to tinted SF Symbols later for polish.
 
-| state    | icon | when |
-|----------|------|------|
-| neutral  | ⚪   | idle / after the result window elapses |
-| working  | ⏳   | check in flight |
-| green    | 🟢   | verdict 🟢 |
-| yellow   | 🟡   | verdict 🟡 |
-| red      | 🔴   | verdict 🔴 |
-| empty    | 📋   | clipboard has no text — nothing to check (**not** an error) |
-| error    | ⚠️   | `claude` failure or unparseable output |
+| state    | codepoint | when |
+|----------|-----------|------|
+| neutral  | `U+F10C`  | idle / after the result window elapses |
+| working  | `U+F252`  | check in flight |
+| green    | `U+F111`  | verdict green |
+| yellow   | `U+F111`  | verdict yellow |
+| red      | `U+F111`  | verdict red |
+| empty    | `U+F016`  | clipboard has no text — nothing to check (**not** an error) |
+| tooLong  | `U+F02D`  | clipboard text over the 2000-character limit |
+| error    | `U+F071`  | `claude` failure or unparseable output |
+
+The emoji title above shipped as described, but was later replaced with tinted Nerd Font glyphs
+(with an emoji fallback when the font is missing) — see [[0008-nerd-font-status-icons]] for the
+decision and [[ad-hoc-translator]] Slice 1 for the implementation, which also added the `tooLong`
+state reflected in the table above.
 
 ## Concurrency
 
@@ -127,11 +133,11 @@ see [[gui-claude-subprocess-tcc-prompt]].
 
 - `make app` produces `dist/SpellChecker.app`; launching it shows the **neutral** icon in the
   menu bar with **no Dock icon**.
-- Clipboard = clear sentence → ⏳ then **🟢**, reverts to neutral after ~4s.
-- Clipboard = ambiguous/double-meaning sentence → **🔴**. Error-heavy-but-clear → **🟡**
+- Clipboard = clear sentence → hourglass then **green**, reverts to neutral after ~4s.
+- Clipboard = ambiguous/double-meaning sentence → **red**. Error-heavy-but-clear → **yellow**
   (reuse the [[traffic-light-eval]] verified examples).
-- Clipboard empty → **📋** (distinct empty state, held ~4s, **not** treated as an error).
-- Two fast ⌃⌥C presses → the second is **ignored** while the first is in flight (one `claude`
+- Clipboard empty → the **outlined-page** icon (distinct empty state, held ~4s, **not** treated as an error).
+- Two fast ⌃⌥⌘C presses → the second is **ignored** while the first is in flight (one `claude`
   run, confirm via no double-spinner / single result).
 - **Quit** from the menu terminates the app.
 - `make build` + the CLI still work unchanged (regression check after the Core extraction).

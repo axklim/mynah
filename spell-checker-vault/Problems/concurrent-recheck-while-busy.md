@@ -1,11 +1,11 @@
 # ⚠️ Edge case — hotkey pressed while a check is already running
 
 The menu-bar evaluator ([[Roadmap|Phase 2]]) runs an async `claude -p` call that takes a few
-seconds. What happens if the user presses **⌃⌥C** again *before* the in-flight check finishes?
+seconds. What happens if the user presses **⌃⌥⌘C** again *before* the in-flight check finishes?
 
 ## Decision for now (Phase 2)
 
-**Ignore the re-press.** While a check is in flight (icon in the "working" ⏳ state), additional
+**Ignore the re-press.** While a check is in flight (icon in the "working" hourglass state), additional
 hotkey presses are dropped — **no overlapping runs**. Simplest correct behaviour; avoids racing
 icon updates.
 

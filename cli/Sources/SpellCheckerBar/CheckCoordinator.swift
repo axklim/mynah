@@ -19,10 +19,15 @@ final class CheckCoordinator {
         // Ignore re-triggers while a check is in flight — no overlapping runs.
         guard !isChecking else { return }
 
-        let text = (NSPasteboard.general.string(forType: .string) ?? "")
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !text.isEmpty else {
-            status.show(.empty)  // nothing to check — not an error
+        let text: String
+        switch InputText.check(NSPasteboard.general.string(forType: .string)) {
+        case .ok(let trimmed):
+            text = trimmed
+        case .noText:
+            status.show(.empty)    // nothing to check — not an error
+            return
+        case .tooLong:
+            status.show(.tooLong)  // a whole page got copied; don't spend a call on it
             return
         }
 

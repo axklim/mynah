@@ -27,6 +27,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         )
         status.setMenu(menu)
 
+        migrateLegacyToggleCheckShortcutIfNeeded()
+
         // KeyboardShortcuts invokes the handler on the main thread; assumeIsolated
         // bridges it to our @MainActor coordinator across Swift 6 isolation checks.
         KeyboardShortcuts.onKeyDown(for: .toggleCheck) { [weak self] in

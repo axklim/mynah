@@ -44,7 +44,9 @@ echo "Thanks for the review, I've merged the branch." | spell-checker check
 spell-checker --help
 ```
 
-Prints just the verdict to stdout; errors go to stderr with a non-zero exit code.
+Prints just the verdict to stdout; errors go to stderr with a non-zero exit code. Input over 2000
+characters is rejected as a likely misclick (`InputText.characterLimit` in
+`SpellCheckerCore`).
 
 ## Dev (without installing)
 
@@ -54,10 +56,13 @@ cd cli && swift run spell-checker check "some text"
 
 ## Menu-bar app (Phase 2)
 
-A menu-bar app wraps the same evaluator. Press **⌃⌥C** (Control+Option+C) to evaluate whatever
-is on the clipboard; the tray icon shows the verdict for ~4s, then reverts:
+A menu-bar app wraps the same evaluator. Press **⌃⌥⌘C** (Control+Option+Command+C, "Hyper+C") to
+evaluate whatever is on the clipboard; the tray icon shows the verdict for ~4s, then reverts:
 
-⚪ idle · ⏳ checking · 🟢 / 🟡 / 🔴 verdict · 📋 clipboard empty · ⚠️ error
+Hollow circle = idle · hourglass = checking · green / yellow / red dot = verdict · outlined page =
+clipboard empty · book = text over 2000 characters · warning triangle = error. These are
+JetBrainsMono Nerd Font glyphs; install the font (`brew install --cask font-jetbrains-mono-nerd-font`)
+or the app falls back to emoji: ⚪ ⏳ 🟢 🟡 🔴 📋 📏 ⚠️.
 
 ```sh
 make app        # build dist/SpellChecker.app
