@@ -48,16 +48,21 @@ that delivered them.
   font-free (it prints emoji). The app falls back to emoji if the font is missing, so a miss here
   degrades rather than breaks.
 
-- [ ] **Phase 2.3 — Ad-hoc translator (En → Ru)** *(design: [[ad-hoc-translator]])*
+- [x] **Phase 2.3 — Ad-hoc translator (En → Ru)** *(design: [[ad-hoc-translator]])*
   A second hotkey that translates the clipboard **English → Russian** into a floating window —
   for understanding what someone wrote *to* you, the mirror of the checker. Rebinds the checker to
   **Hyper+C** (⌃⌥⌘C); the translator is **Hyper+⇧C** (⌃⌥⌘⇧C). Word input (1–2 words) gets up to 3
   meanings with simple-English explanations and examples; longer text gets just the translation.
   Adds the shared input guards the checker never had (no text / over 2000 characters) and swaps the
-  emoji icons for Nerd Font glyphs ([[0008-nerd-font-status-icons]]). Three verifiable slices —
-  guards + icons and `spell-checker translate` have landed; the floating window (slice 3) remains.
-  *Being built **ahead of** the distribution track above (branch `ad-hoc-translator`, 2026-08-04);
+  emoji icons for Nerd Font glyphs ([[0008-nerd-font-status-icons]]). All three verifiable slices
+  have landed — guards + icons, `spell-checker translate`, and the floating window — and the whole
+  feature was manually verified 2026-08-05. Not everything is settled: a handful of follow-ups from
+  that pass, including one that would change shipped behaviour, are tracked in [[inbox]].
+  *Was built **ahead of** the distribution track above (branch `ad-hoc-translator`, 2026-08-04);
   numbered after it to keep the phase numbers in order.*
+
+> **Next up.** With Phase 2.3 done, the distribution track above — Phase 2.1 (GitHub) then Phase
+> 2.2 (Homebrew) — is next, before Phase 3's polish loop.
 
 - [ ] **Phase 3 — Wire the polish loop into the GUI**
   Input → Claude → one revised version → copy back. Implement the **"use my original / skip"**

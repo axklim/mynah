@@ -60,7 +60,14 @@ CLI targets:
 the global hotkey **⌃⌥⌘C** (Hyper+C) (via the `KeyboardShortcuts` package) evaluates the clipboard text and
 shows the verdict in the status-item icon for ~4s, then reverts: a green / yellow / red dot, an
 outlined page when the clipboard has no text, a book when the text is over 2000 characters, or a
-warning triangle on failure. The glyphs are JetBrainsMono Nerd Font codepoints tinted via
+warning triangle on failure.
+
+**⌃⌥⌘⇧C** (Hyper+⇧C) translates the clipboard **English → Russian** into a floating window —
+one or two words return up to three meanings with simple-English explanations, longer text returns
+just the translation. Esc or clicking away dismisses it and cancels the call. The window is the UI
+for this feature, so input problems appear as sentences in it rather than as icon states.
+
+The glyphs are JetBrainsMono Nerd Font codepoints tinted via
 `IconTint`; without that font installed the app falls back to emoji.
 
 - `make app` — build `cli/dist/SpellChecker.app` · `make run-app` — build and open it

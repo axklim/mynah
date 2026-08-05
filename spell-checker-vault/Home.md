@@ -43,7 +43,7 @@ and learns from their recurring mistakes to teach better English over time. Full
 - 🧪 **Findings** — [[haiku-misses-ambiguity]] · [[gui-claude-subprocess-tcc-prompt]] ·
   [[nerd-font-codepoint-identity]] · [[keyboardshortcuts-persists-its-default]]
 - 📓 **Sessions** — [[2026-06-23-session-01-foundation]] · [[2026-06-23-session-02-cli-prototype]] · [[2026-06-24-session-03-traffic-light-evaluator]] · [[2026-06-25-session-04-menubar-evaluator]] · [[2026-08-04-session-05-translator-slice-1]] ·
-  [[2026-08-05-session-06-translator-slice-2]]
+  [[2026-08-05-session-06-translator-slice-2]] · [[2026-08-05-session-07-translator-slice-3]]
 
 ## How to use this vault
 

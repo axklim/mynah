@@ -20,7 +20,7 @@ final class CheckCoordinator {
         guard !isChecking else { return }
 
         let text: String
-        switch InputText.check(NSPasteboard.general.string(forType: .string)) {
+        switch InputText.check(clipboardText()) {
         case .ok(let trimmed):
             text = trimmed
         case .noText:

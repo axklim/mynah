@@ -12,4 +12,17 @@ extension KeyboardShortcuts.Name {
         "toggleCheck",
         default: .init(.c, modifiers: [.control, .option, .command])
     )
+
+    /// Global hotkey that translates the clipboard into the floating window.
+    /// Default: Hyper+⇧C (⌃⌥⌘⇧C) — the checker's Hyper+C plus Shift.
+    ///
+    /// A fresh name, so no stored value exists for it and the code default applies.
+    /// Note what slice 1 learned the hard way: `KeyboardShortcuts` writes this
+    /// default into UserDefaults on first launch, and from then on the stored value
+    /// wins — see Findings/keyboardshortcuts-persists-its-default. Changing it later
+    /// needs a migration, not just an edit here.
+    @MainActor static let translateClipboard = Self(
+        "translateClipboard",
+        default: .init(.c, modifiers: [.control, .option, .command, .shift])
+    )
 }

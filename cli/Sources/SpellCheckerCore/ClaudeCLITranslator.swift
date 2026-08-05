@@ -15,12 +15,24 @@ public struct ClaudeCLITranslator: TextTranslator {
         self.model = model
     }
 
-    public func translate(_ text: String) throws -> TranslationResult {
+    public func translate(
+        _ text: String,
+        onStart: (@Sendable (TranslationHandle) -> Void)?
+    ) throws -> TranslationResult {
+        // ClaudeCLI speaks Process because that is what it owns; the handle is what
+        // the public API speaks, so no caller outside Core learns how cancelling works.
+        let hook: ((Process) -> Void)? = onStart.map { report in
+            { process in
+                report(TranslationHandle { process.terminate() })
+            }
+        }
+
         switch TranslationMode.forInput(text) {
         case .text:
             let reply = try ClaudeCLI.run(
                 prompt: textTranslationPrompt + "\n\n" + text,
-                model: model
+                model: model,
+                onStart: hook
             )
             let translation = reply.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !translation.isEmpty else {
@@ -31,7 +43,8 @@ public struct ClaudeCLITranslator: TextTranslator {
         case .word:
             let reply = try ClaudeCLI.run(
                 prompt: wordTranslationPrompt + "\n\n" + text,
-                model: model
+                model: model,
+                onStart: hook
             )
             return try Self.parseWordResult(from: reply)
         }

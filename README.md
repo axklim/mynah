@@ -26,6 +26,9 @@ spell-checker check "i has finished the task and it works good"
 Or run it as a menu-bar app — `make run-app`, then press **⌃⌥⌘C** (Hyper+C) to rate whatever's on the
 clipboard; the tray icon shows the verdict for a few seconds. See [`cli/`](cli/README.md).
 
+A second hotkey (**⌃⌥⌘⇧C**) translates the clipboard from English to Russian into a floating
+window, for understanding what someone wrote to you.
+
 Needs a Swift 6 toolchain and an authenticated `claude` CLI — no API key.
 
 ## Where the knowledge lives
@@ -36,7 +39,7 @@ start at `spell-checker-vault/Home.md`. See [`CLAUDE.md`](CLAUDE.md) for a quick
 
 ## Status
 
-Early. Phases 1–2 have shipped: the CLI evaluator (installable via `make install`) and a
-menu-bar app that rates the clipboard on a global hotkey (**⌃⌥⌘C**) and shows a green / yellow /
-red dot in the menu bar — see [`cli/`](cli/README.md). Roadmap & current status:
-`spell-checker-vault/Roadmap.md`.
+Early. Phases 1–2.3 have shipped: the CLI evaluator (installable via `make install`), a menu-bar
+app that rates the clipboard on a global hotkey (**⌃⌥⌘C**) and shows a green / yellow / red dot in
+the menu bar, and a second hotkey (**⌃⌥⌘⇧C**) that translates the clipboard into a floating window
+— see [`cli/`](cli/README.md). Roadmap & current status: `spell-checker-vault/Roadmap.md`.

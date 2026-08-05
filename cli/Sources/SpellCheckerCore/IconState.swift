@@ -20,6 +20,7 @@ public enum IconState: Sendable, Equatable {
     case empty     // clipboard had no text — nothing to check (NOT an error)
     case tooLong   // clipboard text is past the limit — almost surely a misclick
     case error     // claude failed or returned unparseable output
+    case translating  // a translation is in flight; the panel is the real UI
     case verdict(Verdict)
 
     /// Nerd Font glyph (JetBrainsMonoNF-Regular), rendered as the status-item
@@ -37,6 +38,7 @@ public enum IconState: Sendable, Equatable {
         case .empty:   return "\u{f016}"  // nf-fa-file_o — an empty page
         case .tooLong: return "\u{f02d}"  // nf-fa-book — "you copied a book"
         case .error:   return "\u{f071}"  // nf-fa-exclamation_triangle
+        case .translating: return "\u{f05ca}"  // nf-md-translate — 文A
         case .verdict: return "\u{f111}"  // nf-fa-circle — colour carries the verdict
         }
     }
@@ -47,7 +49,7 @@ public enum IconState: Sendable, Equatable {
     /// a whole page" and "claude broke" want different reactions.
     public var tint: IconTint {
         switch self {
-        case .neutral, .working: return .standard
+        case .neutral, .working, .translating: return .standard
         case .empty, .tooLong:   return .standard
         case .error:             return .orange
         case .verdict(let v):
@@ -69,6 +71,7 @@ public enum IconState: Sendable, Equatable {
         case .empty:   return "📋"
         case .tooLong: return "📏"
         case .error:   return "⚠️"
+        case .translating: return "🔤"
         case .verdict(let v):
             switch v {
             case .green:  return "🟢"
@@ -79,11 +82,11 @@ public enum IconState: Sendable, Equatable {
     }
 
     /// True for states that should auto-revert to `.neutral` after the display
-    /// window; false for `.neutral` (the resting state) and `.working` (replaced
-    /// by the result, not by a timer).
+    /// window; false for `.neutral` (the resting state), `.working`, and `.translating`
+    /// (both replaced by the result, not by a timer).
     public var isTransient: Bool {
         switch self {
-        case .neutral, .working: return false
+        case .neutral, .working, .translating: return false
         case .empty, .tooLong, .error, .verdict: return true
         }
     }
@@ -91,7 +94,7 @@ public enum IconState: Sendable, Equatable {
     /// Every state, for exhaustive tests. `IconState` cannot be `CaseIterable`
     /// because `verdict` carries an associated value.
     public static let allStates: [IconState] = [
-        .neutral, .working, .empty, .tooLong, .error,
+        .neutral, .working, .empty, .tooLong, .error, .translating,
         .verdict(.green), .verdict(.yellow), .verdict(.red),
     ]
 }

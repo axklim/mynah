@@ -18,10 +18,11 @@ enum ClaudeCLI {
     /// Run claude with `prompt` on stdin and return stdout.
     ///
     /// - Parameter onStart: called with the live process immediately after launch.
-    ///   Nothing uses it yet. It exists because slice 3's floating window must be
-    ///   able to kill an in-flight call when the panel is dismissed, and Swift
-    ///   `Task` cancellation cannot do that — the read below blocks in a way that
-    ///   ignores it, so the caller needs the `Process` itself to terminate.
+    ///   `ClaudeCLITranslator.translate` wraps that process in a `TranslationHandle`
+    ///   it hands back to its own caller, so the floating window can kill an
+    ///   in-flight call when the panel is dismissed. Swift `Task` cancellation
+    ///   cannot do that on its own — the read below blocks in a way that ignores
+    ///   it, so the caller needs the `Process` itself to terminate.
     static func run(
         prompt: String,
         model: String,

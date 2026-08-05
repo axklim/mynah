@@ -1,6 +1,6 @@
 # Design — Ad-hoc translator (En → Ru)
 
-> Status: **slices 1–2 shipped; slice 3 (the floating window) remains**. Brainstormed 2026-08-04 on branch `ad-hoc-translator`.
+> Status: **all three slices shipped**. Brainstormed 2026-08-04 on branch `ad-hoc-translator`.
 > Ships in three slices; each is separately verifiable. See [[Roadmap|Phase 2.3]].
 
 A second hotkey that translates the clipboard from **English to Russian** and shows the result in
@@ -19,7 +19,7 @@ It also rebinds the existing checker, and back-fills a guard the checker never h
 | Length limit | **2000 characters**, shared by both features. |
 | Word vs text | **1–2 words** → word mode. **3+** → text mode. |
 | "more…" | **Passive indicator only.** Clickable expansion is a follow-up ([[inbox]]). |
-| Copy the result | **No copy button, no auto-copy.** The text is selectable, so ⌘C works. Revisit once real use says something. |
+| Copy the result | **No copy button, no auto-copy.** Selection is enabled, but **⌘C does not currently copy** — nothing routes the `copy:` action. This decision is provisional, not settled, and stays reopened until the follow-up in [[inbox]] lands. |
 | Icons | **Nerd Font glyphs**, not emoji — see [[0008-nerd-font-status-icons]]. |
 
 ### Hotkeys
@@ -291,7 +291,7 @@ meanings, and malformed input.
 
 ---
 
-## Slice 3 — The floating translation window
+## Slice 3 (shipped) — The floating translation window
 
 ### The panel
 
@@ -319,20 +319,31 @@ enum TranslationViewState {
 }
 ```
 
+**Learned in execution.** `TranslationViewState` and every user-facing sentence it produces live in
+`SpellCheckerUI` rather than in the `SpellCheckerBar` executable target, because an executable
+target cannot be imported by the test bundle — slice 1 shipped a real defect of exactly that shape
+(an untested mapping was the only thing distinguishing a green verdict from a red one).
+
 Word mode: the source word as a header, then numbered rows — Russian prominent, simple-English
 explanation beneath in secondary text, the example quoted below that — and a dim "more meanings
 exist" footer only when `hasMore`. Text mode shows just the Russian; the English was copied a
 second ago, reprinting it is noise.
 
 Body text uses the **system font** — the Nerd Font is for icon glyphs only. Everything is
-`.textSelection(.enabled)`, which settles the copy question for free: ⌘C works and no button exists
-to explain.
+`.textSelection(.enabled)`, so text selects — but that does **not** settle the copy question: ⌘C
+does not copy, because nothing routes the `copy:` action (diagnosis in [[inbox]]). The "no copy
+button, selection is enough" decision is reopened until that's fixed.
 
 Fixed width **420pt**; height fits the content up to **520pt**, beyond which a `ScrollView` takes
 over — not optional, since 2000 characters of Russian would otherwise run off the bottom of the
 screen. Placed horizontally centred on `NSScreen.main` in the upper third: Spotlight-like and
 predictable, rather than chasing a mouse that was not involved in pressing a keyboard shortcut.
 (Both numbers are starting points to be judged on screen, like the `.baselineOffset` nudge.)
+
+**Learned in execution.** The panel doesn't hard-code a height — it sizes itself from the hosting
+`NSHostingView`'s `fittingSize`, clamped between a small minimum and `maxHeight`, because a
+`ScrollView` does not shrink to fit short content the way a `VStack` does; without the clamp, every
+state would open at the full 520pt, mostly empty for a one-line reply.
 
 ### TranslateCoordinator
 
@@ -359,10 +370,20 @@ do it: the task is blocked in `readDataToEndOfFile()` on a `Process` that knows 
 cooperative cancellation, so the subprocess runs to completion, a translation nobody reads gets
 paid for, and a late reply arrives at a closed panel.
 
-So `ClaudeCLI.run` takes an `onStart: (Process) -> Void` hook, the coordinator stashes the process
-and calls `terminate()` on dismissal, and a generation counter prevents a late reply from run *n*
-rendering into the panel from run *n+1*. About fifteen lines; skipping them is what turns into
-"why is my fan spinning".
+So `TextTranslator.translate(_:onStart:)` never hands the coordinator a `Process` — it hands back a
+public `TranslationHandle` whose `cancel()` hides *how* the work actually stops. Today that means
+`ClaudeCLI.run`'s internal `onStart: (Process) -> Void` hook feeds `ClaudeCLITranslator` a live
+`Process`, which it wraps as `TranslationHandle { process.terminate() }` before the handle ever
+leaves Core; the coordinator only ever calls `.cancel()`. This indirection exists because
+`TextTranslator` is the documented backend-swap point ([[0006-polish-backend-claude-cli]]): a
+protocol method that handed back a `Foundation.Process` could never be implemented by a future
+litellm/HTTP backend, which cancels a request rather than killing a subprocess. `TranslationHandle`
+is a locked, idempotent class rather than an `actor` on purpose, so `cancel()` can be called
+synchronously from the main actor (Esc, focus loss) while the translation itself runs on a
+background task — an `actor` would force `async` everywhere and reintroduce the reliability problem
+this exists to fix. A generation counter still prevents a late reply from run *n* rendering into
+the panel from run *n+1*, and stops a handle from being adopted for a run that has already been
+dismissed. About fifteen lines; skipping them is what turns into "why is my fan spinning".
 
 ### Errors read as sentences
 
@@ -385,7 +406,7 @@ testable without focus games.
 - Empty clipboard → the no-text message. 3000 characters → the too-long message, **instantly**,
   proving no LLM call happened.
 - A long translation scrolls and stays on screen.
-- Text selects; ⌘C copies.
+- Text selects; **⌘C does not copy** — a real gap found in this pass, tracked in [[inbox]].
 - Hyper+C still runs the icon-only check; the two fired back to back do not interfere.
 - Both menu items work.
 

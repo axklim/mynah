@@ -87,6 +87,12 @@ clipboard empty · book = text over 2000 characters · warning triangle = error.
 JetBrainsMono Nerd Font glyphs; install the font (`brew install --cask font-jetbrains-mono-nerd-font`)
 or the app falls back to emoji: ⚪ ⏳ 🟢 🟡 🔴 📋 📏 ⚠️.
 
+Press **⌃⌥⌘⇧C** (Hyper+⇧C) to translate the clipboard from English into Russian in a floating
+window. One or two words return up to three meanings with simple-English explanations and examples;
+three or more words return just the translation. Esc — or clicking into another app — dismisses the
+window and cancels the call. Because the window is this feature's whole UI, an empty or oversized
+clipboard is reported as a sentence inside it rather than as a menu-bar icon.
+
 ```sh
 make app        # build dist/SpellChecker.app
 make run-app    # build and open it

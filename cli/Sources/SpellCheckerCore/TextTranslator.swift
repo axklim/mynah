@@ -49,11 +49,27 @@ struct TranslationError: Error, CustomStringConvertible {
 
 /// The second backend-swap point, beside `TextEvaluator` (Decision 0006).
 /// Today: `ClaudeCLITranslator`. A litellm / Gemini backend can conform later
-/// without touching the CLI.
+/// without touching the CLI or the panel.
 public protocol TextTranslator: Sendable {
     /// Translate English into Russian. The shape of the result follows
     /// `TranslationMode.forInput(text)`.
-    func translate(_ text: String) throws -> TranslationResult
+    ///
+    /// - Parameter onStart: called once the work is under way, with a handle that
+    ///   cancels it. Invoked on whatever thread the translation runs on, so a
+    ///   main-actor caller must hop before touching UI state. The floating window
+    ///   uses this to kill an in-flight call when it is dismissed.
+    func translate(
+        _ text: String,
+        onStart: (@Sendable (TranslationHandle) -> Void)?
+    ) throws -> TranslationResult
+}
+
+public extension TextTranslator {
+    /// Translate without taking a cancellation handle — the CLI's case, where the
+    /// process lives exactly as long as the command does.
+    func translate(_ text: String) throws -> TranslationResult {
+        try translate(text, onStart: nil)
+    }
 }
 
 /// Text mode: the reply is used verbatim, so the prompt has to be strict about
