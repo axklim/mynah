@@ -1,6 +1,6 @@
 # Design — Ad-hoc translator (En → Ru)
 
-> Status: **approved, not yet implemented**. Brainstormed 2026-08-04 on branch `ad-hoc-translator`.
+> Status: **slices 1–2 shipped; slice 3 (the floating window) remains**. Brainstormed 2026-08-04 on branch `ad-hoc-translator`.
 > Ships in three slices; each is separately verifiable. See [[Roadmap|Phase 2.3]].
 
 A second hotkey that translates the clipboard from **English to Russian** and shows the result in
@@ -58,7 +58,7 @@ and it leaves a permanent `spell-checker translate` behind.
 
 ---
 
-## Slice 1 — Shared input guards, the rebind, and Nerd Font icons
+## Slice 1 (shipped) — Shared input guards, the rebind, and Nerd Font icons
 
 ### One guard rule in Core, three renderings
 
@@ -174,7 +174,7 @@ describe the emoji icon set. So do `README.md`, `cli/README.md`, the `Makefile`,
 
 ---
 
-## Slice 2 — Translator in Core + `spell-checker translate`
+## Slice 2 (shipped) — Translator in Core + `spell-checker translate`
 
 ### Types
 
@@ -214,7 +214,7 @@ TCC prompts ([[gui-claude-subprocess-tcc-prompt]]). Duplicating them is how one 
 only the GUI breaks, months later, in a way that costs an evening to re-diagnose.
 
 `ClaudeCLIEvaluator` shrinks to prompt + `parseVerdict`. `ClaudeCLITranslator` is prompt +
-`parseTranslation`. `onStart` exists for slice 3's cancellation.
+`parseWordResult`. `onStart` exists for slice 3's cancellation.
 
 ### Prompts
 
@@ -253,19 +253,30 @@ mode prints:
 
 ```
 commit
-  1. фиксация — saving your changes into the repository history
-     "I commit my changes before lunch."
-  2. обязательство — a promise to do something
-     "This is a big commit of time."
+  1. совершать (что-то), делать — to do or carry out an action, especially a crime or mistake
+     "He committed a serious error in the report."
+  2. обязываться, брать на себя обязательство — to promise or dedicate yourself to a course of action or relationship
+     "She committed to finishing the project by Friday."
+  3. коммит (в системе контроля версий) — to save a set of code changes permanently to a version control repository
+     "Don't forget to commit your changes before pushing."
   … more meanings exist
 ```
 
 The last line appears only when `hasMore`.
 
+**Learned in execution.** The input guard is not duplicated per subcommand: both `check` and
+`translate` call one `requireInput` helper in `main.swift`, which reads stdin or the joined
+arguments and applies `InputText.check` once, so the two commands cannot silently diverge on
+rejection wording or the length limit. The renderer above is
+`TranslationResult.terminalText(source:)`, living in `SpellCheckerCore` rather than in the CLI
+target — an executable target cannot be imported by the test bundle, and slice 1 shipped a real
+defect of exactly that shape (an untested mapping was the only thing distinguishing a green verdict
+from a red one), so this time the renderer stayed in Core, under test.
+
 ### Tests
 
 Pure, no network: `forInput` on `commit` / `New York` / `look up` → word, `commit the change` →
-text, plus odd whitespace and a hyphenated single word; and `parseTranslation` across clean JSON,
+text, plus odd whitespace and a hyphenated single word; and `parseWordResult` across clean JSON,
 fenced JSON, JSON behind leading prose, four meanings clamped to three with `hasMore` forced, zero
 meanings, and malformed input.
 

@@ -48,6 +48,29 @@ Prints just the verdict to stdout; errors go to stderr with a non-zero exit code
 characters is rejected as a likely misclick (`InputText.characterLimit` in
 `SpellCheckerCore`).
 
+```
+spell-checker translate <text>     Translate English → Russian
+spell-checker translate            Read the text from stdin
+```
+
+```
+$ spell-checker translate commit
+commit
+  1. совершать (что-то), делать — to do or carry out an action, especially a crime or mistake
+     "He committed a serious error in the report."
+  2. обязываться, брать на себя обязательство — to promise or dedicate yourself to a course of action or relationship
+     "She committed to finishing the project by Friday."
+  3. коммит (в системе контроля версий) — to save a set of code changes permanently to a version control repository
+     "Don't forget to commit your changes before pushing."
+  … more meanings exist
+```
+
+The final line appears only when the word has further common meanings that were left out.
+
+Direction is English → Russian only; there is no autodetection, so pasting Russian is undefined.
+Three or more words return the translation alone, which is what makes
+`pbpaste | spell-checker translate | pbcopy` round-trip cleanly.
+
 ## Dev (without installing)
 
 ```sh

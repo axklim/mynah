@@ -52,6 +52,9 @@ CLI targets:
 - `make build` / `make uninstall` / `make clean`; bare `make` prints the target list
 - Dev without installing: `cd cli && swift run spell-checker check "some text"`
 - Run it: `spell-checker check "<text>"` (or `pbpaste | spell-checker check`) → one verdict 🔴/🟡/🟢
+- Translate it: `spell-checker translate "<text>"` (or `pbpaste | spell-checker translate`) —
+  **English → Russian only**, no autodetection. One or two words return up to three meanings, each
+  with a simple-English explanation and an example; three or more words return just the translation.
 
 **Menu-bar app (Phase 2).** `spell-checker-bar` is an `LSUIElement` accessory app (no Dock icon):
 the global hotkey **⌃⌥⌘C** (Hyper+C) (via the `KeyboardShortcuts` package) evaluates the clipboard text and

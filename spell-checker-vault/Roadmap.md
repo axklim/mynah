@@ -55,7 +55,7 @@ that delivered them.
   meanings with simple-English explanations and examples; longer text gets just the translation.
   Adds the shared input guards the checker never had (no text / over 2000 characters) and swaps the
   emoji icons for Nerd Font glyphs ([[0008-nerd-font-status-icons]]). Three verifiable slices —
-  guards + icons, then `spell-checker translate`, then the window.
+  guards + icons and `spell-checker translate` have landed; the floating window (slice 3) remains.
   *Being built **ahead of** the distribution track above (branch `ad-hoc-translator`, 2026-08-04);
   numbered after it to keep the phase numbers in order.*
 

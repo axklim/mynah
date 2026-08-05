@@ -15,6 +15,9 @@ Two pillars:
 A first prototype lives in [`cli/`](cli/README.md): a `spell-checker check` command that rates
 a message 🔴 / 🟡 / 🟢 (no rewrite yet).
 
+The CLI also translates English into Russian — `spell-checker translate "<text>"` — returning up to
+three meanings for a single word or short phrase, or just the translation for anything longer.
+
 ```sh
 make install      # builds + installs `spell-checker` to ~/.local/bin
 spell-checker check "i has finished the task and it works good"
