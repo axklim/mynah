@@ -1,0 +1,35 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+
+# Obsidian — keep notes, graph & shared config; ignore volatile per-machine state.
+# Patterns are depth-agnostic so they match the nested vault folder.
+**/.obsidian/workspace.json
+**/.obsidian/workspace-mobile.json
+**/.obsidian/cache/
+**/.trash/
+
+# JetBrains IDEs
+.idea/
+
+# Claude Code — local agent state (not project source)
+.claude/agent-memory/
+
+# Swift Package Manager
+.build/
+.swiftpm/
+Package.resolved
+dist/
+
+# Xcode
+DerivedData/
+*.xcuserstate
+*.xcscmblueprint
+xcuserdata/
+*.moved-aside
+build/
+
+# Superpowers — SDD scratch (ledger, briefs, review packages)
+.superpowers/
