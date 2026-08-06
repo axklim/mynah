@@ -59,6 +59,24 @@ Quick capture. Drop half-formed ideas here without ceremony; promote the good on
   ([[ad-hoc-translator]]) **depended on ⌘C working for free — it doesn't**, so that decision is
   reopened until one of the fixes lands: a plain copy button is back on the table, not something
   already ruled out.
+- **Polish command — pillar 1 filed with a worked example** — requested 2026-08-06. Run the
+  fixed polish prompt (verbatim in `CLAUDE.md`) over the input text and return **one** revised
+  version:
+  > Fix the grammar and make the text sound more natural. Use simple technical English and a
+  > warm, cozy tone. Provide only one revised version: `<text>`
+
+  This is [[Roadmap|Phase 3]]'s polish loop; this entry pins the expected behaviour with a real
+  example. A first verifiable slice could be `spell-checker polish` (mirroring `translate`),
+  with the GUI wiring after.
+  **Worked example.** Input:
+  > I'm going to deploy: https://github.com/ozean12/refinancing/pull/1597 (hold fundings as a list on the invoice aggregate) and will monitor it tomorrow morning :slightly_smiling_face:
+
+  Expected output:
+  > I'm going to deploy https://github.com/ozean12/refinancing/pull/1597 (hold fundings as a list on the invoice aggregate) and will monitor it tomorrow morning. 🙂
+
+  Note what "natural" means here beyond grammar: the stray colon before the URL goes, a period
+  lands at the end of the sentence, and the Slack-style `:slightly_smiling_face:` shortcode
+  becomes a real emoji 🙂 — the polish should clean up chat-isms too.
 - **Sort out `Ideas/Draft.md`** — it holds raw personal drafts/notes (vault naming, session-start
   behaviour, where notes/todos should live). Review them, promote anything worth keeping into
   [[Spec]], [[Roadmap]], a Design note, or a proper inbox item above, then trim the file.
