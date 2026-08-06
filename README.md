@@ -1,4 +1,4 @@
-# spell-checker
+# Mynah
 
 A native macOS app that helps a non-native English speaker send clear, natural messages —
 and quietly learns from recurring mistakes to teach better English over time.
@@ -12,15 +12,15 @@ Two pillars:
 
 ## Try it
 
-A first prototype lives in [`cli/`](cli/README.md): a `spell-checker check` command that rates
+A first prototype lives in [`cli/`](cli/README.md): a `mynah check` command that rates
 a message 🔴 / 🟡 / 🟢 (no rewrite yet).
 
-The CLI also translates English into Russian — `spell-checker translate "<text>"` — returning up to
+The CLI also translates English into Russian — `mynah translate "<text>"` — returning up to
 three meanings for a single word or short phrase, or just the translation for anything longer.
 
 ```sh
-make install      # builds + installs `spell-checker` to ~/.local/bin
-spell-checker check "i has finished the task and it works good"
+make install      # builds + installs `mynah` to ~/.local/bin
+mynah check "i has finished the task and it works good"
 ```
 
 Or run it as a menu-bar app — `make run-app`, then press **⌃⌥⌘C** (Hyper+C) to rate whatever's on the
@@ -34,12 +34,12 @@ Needs a Swift 6 toolchain and an authenticated `claude` CLI — no API key.
 ## Where the knowledge lives
 
 Project knowledge — vision, decisions, designs, problems, and findings — lives in an
-**Obsidian vault** at [`spell-checker-vault/`](spell-checker-vault/Home.md). Open that folder as a vault in Obsidian, or
-start at `spell-checker-vault/Home.md`. See [`CLAUDE.md`](CLAUDE.md) for a quick orientation.
+**Obsidian vault** at [`mynah-vault/`](mynah-vault/Home.md). Open that folder as a vault in Obsidian, or
+start at `mynah-vault/Home.md`. See [`CLAUDE.md`](CLAUDE.md) for a quick orientation.
 
 ## Status
 
 Early. Phases 1–2.3 have shipped: the CLI evaluator (installable via `make install`), a menu-bar
 app that rates the clipboard on a global hotkey (**⌃⌥⌘C**) and shows a green / yellow / red dot in
 the menu bar, and a second hotkey (**⌃⌥⌘⇧C**) that translates the clipboard into a floating window
-— see [`cli/`](cli/README.md). Roadmap & current status: `spell-checker-vault/Roadmap.md`.
+— see [`cli/`](cli/README.md). Roadmap & current status: `mynah-vault/Roadmap.md`.

@@ -2,44 +2,45 @@
 import PackageDescription
 
 let package = Package(
-    name: "SpellChecker",
+    name: "Mynah",
     platforms: [.macOS(.v13)],
     products: [
-        // Binary names are hyphenated; target/module names can't be, hence the split.
-        .executable(name: "spell-checker", targets: ["SpellChecker"]),
-        .executable(name: "spell-checker-bar", targets: ["SpellCheckerBar"])
+        // Binary names are lowercase (mynah-bar hyphenated); module names are CamelCase
+        // and can't contain hyphens, hence the split.
+        .executable(name: "mynah", targets: ["Mynah"]),
+        .executable(name: "mynah-bar", targets: ["MynahBar"])
     ],
     dependencies: [
         .package(url: "https://github.com/sindresorhus/KeyboardShortcuts", from: "1.9.0")
     ],
     targets: [
         .target(
-            name: "SpellCheckerCore",
-            path: "Sources/SpellCheckerCore"
+            name: "MynahCore",
+            path: "Sources/MynahCore"
         ),
         .target(
-            name: "SpellCheckerUI",
-            dependencies: ["SpellCheckerCore"],
-            path: "Sources/SpellCheckerUI"
+            name: "MynahUI",
+            dependencies: ["MynahCore"],
+            path: "Sources/MynahUI"
         ),
         .executableTarget(
-            name: "SpellChecker",
-            dependencies: ["SpellCheckerCore"],
-            path: "Sources/SpellChecker"
+            name: "Mynah",
+            dependencies: ["MynahCore"],
+            path: "Sources/Mynah"
         ),
         .executableTarget(
-            name: "SpellCheckerBar",
+            name: "MynahBar",
             dependencies: [
-                "SpellCheckerCore",
-                "SpellCheckerUI",
+                "MynahCore",
+                "MynahUI",
                 .product(name: "KeyboardShortcuts", package: "KeyboardShortcuts"),
             ],
-            path: "Sources/SpellCheckerBar"
+            path: "Sources/MynahBar"
         ),
         .testTarget(
-            name: "SpellCheckerCoreTests",
-            dependencies: ["SpellCheckerCore", "SpellCheckerUI"],
-            path: "Tests/SpellCheckerCoreTests"
+            name: "MynahCoreTests",
+            dependencies: ["MynahCore", "MynahUI"],
+            path: "Tests/MynahCoreTests"
         )
     ]
 )
