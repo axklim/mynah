@@ -93,6 +93,10 @@ see the vault Finding *gui-claude-subprocess-tcc-prompt*.
 - **Verify before moving on.** Every slice must be demonstrably working before the next starts.
 - **Vault as the second brain.** Capture ideas, decisions, problems, and findings in `mynah-vault/`
   as we go. When something non-obvious is decided or discovered, write it down there.
+- **Keep chat replies short.** Report what landed, what was verified, and anything that blocks —
+  in a few lines. No long write-ups, no re-explaining reasoning already captured in the vault, no
+  restating the diff in prose. The detail belongs in `mynah-vault/`; the reply just points at it.
+  The developer asks when they want more on a specific point.
 
 See `mynah-vault/Roadmap.md` for the phased plan and current status.
 
