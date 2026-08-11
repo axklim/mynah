@@ -39,20 +39,52 @@ Two build-environment facts are encoded in the formula:
 2. **`ENV["HOME"] = buildpath/"brew-home"`.** SwiftPM's caches live under the real `$HOME`, outside
    the sandbox, and it warns and disables user-level caching without a writable one.
 
-The formula lives **only in the tap repo** (`axklim/homebrew-tap`), not in this repository. A second
-copy here would drift, and the tap is what Homebrew actually reads. `RELEASING.md` in the tap holds
-the tag-and-checksum procedure.
+The formula lives **in this repository** at `Formula/mynah.rb` — the repo *is* the tap, matching the
+convention already in use at `axklim/mbright`. This replaces an earlier plan for a separate
+`axklim/homebrew-tap` repo: one copy of the formula, no drift, no second repo to own.
+
+The cost is that Homebrew cannot auto-tap, because auto-tap only resolves repos named
+`homebrew-<name>`. Users need the two-argument `brew tap` with an explicit URL, and — on Homebrew 6 —
+a `brew trust` step for any third-party tap:
+
+```sh
+brew tap axklim/mynah https://github.com/axklim/mynah
+brew trust --formula axklim/mynah/mynah
+brew install axklim/mynah/mynah
+```
+
+**Releasing.** Homebrew pins a release to a tag's tarball and that tarball's checksum, so a release is
+a tag followed by a formula bump — the checksum cannot exist before the tag does. The version itself
+has **one** home, `MynahVersion.swift`; `make app` generates `Info.plist` from `Info.plist.in` with it
+substituted in, so the binary and the bundle cannot disagree.
+
+1. Bump `MynahVersion.current` in `cli/Sources/MynahCore/MynahVersion.swift`. Commit to `main`.
+2. `git tag -a v0.2.0 -m "mynah 0.2.0" && git push origin v0.2.0`
+3. `curl -sL https://github.com/axklim/mynah/archive/refs/tags/v0.2.0.tar.gz | shasum -a 256`
+4. Update `url` and `sha256` in `Formula/mynah.rb` and commit to `main`.
+5. Verify: `brew uninstall mynah; brew install --build-from-source axklim/mynah/mynah`,
+   `brew test mynah`, `brew audit --strict --formula axklim/mynah/mynah`, then a real
+   `mynah check` — expect a verdict, not an error.
+
+The formula's `test` block asserts `mynah --version` equals the version Homebrew derived from the
+tarball URL. That is deliberate: it is the one release mistake the formula could not otherwise
+see — a tag cut without step 1, leaving the binary reporting the previous version. `brew test` fails
+instead of shipping it. `make version` prints the current value without grepping for it.
+
+Because the formula lives in the repo it releases, step 4 always commits *after* the tag, so the
+formula inside any release tarball is one commit stale. Harmless — Homebrew reads the default branch,
+not the tarball's copy.
 
 ## Consequences
 
-- `brew install axklim/tap/mynah` gives the CLI on any Mac with the Command Line Tools. No Xcode, no
+- `brew install axklim/mynah/mynah` gives the CLI on any Mac with the Command Line Tools. No Xcode, no
   API key — but it does need an authenticated `claude`, which the caveats state.
 - **The menu-bar app — the daily driver — is still not distributed.** `make app` from a clone remains
   the only way to get it. This is the real cost of the decision and it is not small.
-- Every release edits two lines in the tap (`url`, `sha256`). `brew install --HEAD` needs neither and
-  works straight from `main`.
-- The tap must exist on GitHub under the **personal** account; it cannot be created from a work-authed
-  session.
+- Every release edits two lines in `Formula/mynah.rb` (`url`, `sha256`). `brew install --HEAD` needs
+  neither and works straight from `main`.
+- Tagging pushes to `axklim/mynah`, which needs the **personal** account — a work-authed session can
+  push to the fork and open a PR, but not tag the release.
 
 ## Open question — how the app eventually ships
 

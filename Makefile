@@ -6,7 +6,13 @@ BIN    := mynah
 APP    := Mynah
 APPBIN := mynah-bar
 APPDIR := $(PKGDIR)/dist/$(APP).app
-PLIST  := $(PKGDIR)/packaging/Info.plist
+PLISTIN := $(PKGDIR)/packaging/Info.plist.in
+VERSFILE := $(PKGDIR)/Sources/MynahCore/MynahVersion.swift
+
+# The version has exactly one home: MynahVersion.swift. The app bundle's Info.plist is
+# generated from Info.plist.in with this substituted in, so the binary and the bundle can
+# never disagree — a version bump is one line in that Swift file.
+VERSION := $(shell sed -n 's/.*static let current = "\(.*\)".*/\1/p' $(VERSFILE))
 
 # Extra flags for `swift build`. Empty for normal development — SwiftPM's own sandbox
 # around manifest compilation is worth keeping locally. The Homebrew formula passes
@@ -14,7 +20,7 @@ PLIST  := $(PKGDIR)/packaging/Info.plist
 # sandbox-exec fails with "Invalid manifest".
 SWIFT_FLAGS ?=
 
-.PHONY: help build test install uninstall clean app run-app
+.PHONY: help build test install uninstall clean app run-app version
 .DEFAULT_GOAL := help
 
 help:
@@ -26,6 +32,10 @@ help:
 	@echo "  make clean       remove build artifacts"
 	@echo "  make app         build the menu-bar app bundle (dist/Mynah.app)"
 	@echo "  make run-app     build the app bundle and open it"
+	@echo "  make version     print the version (single source: MynahVersion.swift)"
+
+version:
+	@echo $(VERSION)
 
 # Scoped to the CLI product on purpose. Building every target here would also compile
 # MynahBar and its KeyboardShortcuts dependency, which needs full Xcode (see the vault
@@ -53,14 +63,15 @@ uninstall:
 	@echo "removed $(BINDIR)/$(BIN)"
 
 app: ## build the menu-bar app bundle (dist/Mynah.app)
+	@test -n "$(VERSION)" || { echo "error: no version parsed from $(VERSFILE)"; exit 1; }
 	cd $(PKGDIR) && swift build -c release --product $(APPBIN) $(SWIFT_FLAGS)
 	rm -rf $(APPDIR)
 	mkdir -p $(APPDIR)/Contents/MacOS
 	cp $(PKGDIR)/.build/release/$(APPBIN) $(APPDIR)/Contents/MacOS/$(APP)
-	cp $(PLIST) $(APPDIR)/Contents/Info.plist
+	sed 's/__VERSION__/$(VERSION)/' $(PLISTIN) > $(APPDIR)/Contents/Info.plist
 	codesign --force --sign - $(APPDIR)
 	@echo ""
-	@echo "✅ built $(APPDIR)"
+	@echo "✅ built $(APPDIR) (version $(VERSION))"
 	@echo "   open it:  make run-app   (or double-click in Finder)"
 	@echo "   hotkey:   ⌃⌥⌘C (Hyper+C) checks the clipboard"
 

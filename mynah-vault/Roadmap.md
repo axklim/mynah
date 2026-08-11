@@ -40,9 +40,11 @@ that delivered them.
 
 - [~] **Phase 2.2 — Distribute via Homebrew** *(CLI done; app deferred —
   [[0010-homebrew-formula-cli-only]] · [[2026-08-11-session-08-homebrew-distribution]])*
-  **The `mynah` CLI is installable**: `brew install axklim/tap/mynah` builds it from source via the
+  **The `mynah` CLI is installable**: `brew install axklim/mynah/mynah` builds it from source via the
   project's `make install`, verified end-to-end (installed, `brew test`, clean `brew audit --strict`,
-  and a real 🟡 verdict from the installed binary). The formula lives in the tap repo only.
+  and a real 🟡 verdict from the installed binary). `Formula/mynah.rb` lives in this repo — the repo
+  is its own tap, matching `axklim/mbright`; see [[0010-homebrew-formula-cli-only]] for the install
+  and release steps.
   **The menu-bar app is not shipped**, and the reason is a finding, not a shortcut:
   [[preview-macro-needs-xcode]] — `KeyboardShortcuts` uses `#Preview`, whose macro plugin ships only
   inside Xcode, so building the app from source would demand ~10 GB of Xcode from every user; and a
@@ -51,9 +53,10 @@ that delivered them.
   promising being a **formula that installs a prebuilt bundle** (formula downloads aren't
   quarantined). The font question from [[0008-nerd-font-status-icons]] rides along with the app and is
   therefore still open; it does not apply to the CLI, which prints emoji.
-  **Two steps remain, and both need the personal GitHub account** (this session was work-authed):
-  create `axklim/homebrew-tap` and push the tap, then tag `v0.1.0` and fill the formula's `sha256`.
-  See `RELEASING.md` in the tap.
+  `v0.1.0` is tagged and the formula's `sha256` is filled in. `--version` landed afterwards, so the
+  formula still pins `v0.1.0` and its version assertion fails until **`v0.2.0` is tagged** and the
+  formula's `url`/`sha256` follow — the checksum cannot be read before the tag exists. Steps in
+  [[0010-homebrew-formula-cli-only]].
 
 - [x] **Phase 2.3 — Ad-hoc translator (En → Ru)** *(design: [[ad-hoc-translator]])*
   A second hotkey that translates the clipboard **English → Russian** into a floating window —

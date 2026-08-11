@@ -10,6 +10,7 @@ USAGE:
   mynah translate <text>   Translate English → Russian
   mynah translate          Read the text from stdin
   mynah --help             Show this help
+  mynah --version          Print the version
 
 Input over 2000 characters is rejected as a likely misclick.
 """
@@ -52,6 +53,9 @@ let args = Array(CommandLine.arguments.dropFirst())
 switch args.first {
 case "-h", "--help", "help":
     emit(usage, to: .standardOutput)
+
+case "--version", "version":
+    emit(MynahVersion.current, to: .standardOutput)
 
 case "check":
     let text = requireInput(
