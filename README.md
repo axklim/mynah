@@ -19,11 +19,14 @@ The CLI also translates English into Russian — `mynah translate "<text>"` — 
 three meanings for a single word or short phrase, or just the translation for anything longer.
 
 ```sh
-brew install axklim/tap/mynah                       # once the tap is published
+brew tap axklim/mynah https://github.com/axklim/mynah
+brew trust --formula axklim/mynah/mynah
+brew install axklim/mynah/mynah
+
 mynah check "i has finished the task and it works good"
 ```
 
-Or build it yourself:
+The formula builds from source and installs the **CLI only**. Or build it yourself:
 
 ```sh
 make install      # builds + installs `mynah` to ~/.local/bin

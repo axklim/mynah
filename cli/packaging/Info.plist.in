@@ -7,7 +7,7 @@
     <key>CFBundleIdentifier</key>         <string>io.klimov.mynah</string>
     <key>CFBundleExecutable</key>         <string>Mynah</string>
     <key>CFBundlePackageType</key>        <string>APPL</string>
-    <key>CFBundleShortVersionString</key> <string>0.1.0</string>
+    <key>CFBundleShortVersionString</key> <string>__VERSION__</string>
     <key>CFBundleVersion</key>            <string>1</string>
     <key>LSMinimumSystemVersion</key>     <string>13.0</string>
     <key>LSUIElement</key>                <true/>

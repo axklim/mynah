@@ -59,19 +59,26 @@ Xcode from every user.
 - **`make build` used to build every target**, so `make install` compiled `MynahBar` and
   `KeyboardShortcuts` just to install `mynah` — slower, and it pulled the Xcode requirement into the
   CLI path. Now `--product mynah`, matching its own help text and `make app`'s existing scoping.
-- **The formula is deliberately not in this repo.** It lives in the tap, which is what Homebrew
-  reads; a copy here would drift.
-- The formula's `sha256` is a loud placeholder until `v0.1.0` is tagged. `brew install --HEAD`
-  ignores it and works without any tag.
+- **The formula started in a separate tap repo and moved into this one.** The first pass reasoned
+  that the formula belongs in the tap, since a copy here would drift. Then `axklim/mbright` turned
+  out to already solve this the other way: `Formula/` in the project repo, tapped by URL. One copy,
+  no second repo, no drift either — so the tap repo was dropped and untapped.
+- **`brew trust` was the thing we would have shipped wrong.** Homebrew 6 refuses formulae from
+  untrusted third-party taps, so the install instructions need
+  `brew trust --formula axklim/mynah/mynah` between the tap and the install. `mbright`'s README has
+  it; ours would not have.
+- **Auto-tap is the price of repo-as-tap.** Homebrew only auto-taps repos named `homebrew-<name>`,
+  so `brew install axklim/mynah/mynah` fails until the two-argument `brew tap … <URL>` has been run.
+  Verified both ways.
+- The formula's `sha256` was a loud placeholder until `v0.1.0` was tagged; the tag landed the same
+  day and it is now filled in. `brew install --HEAD` ignores it and works without any tag.
 
 ## Next step
 
-**Two steps need the personal GitHub account** — this session was authenticated as the work account,
-so neither could be done here: create `axklim/homebrew-tap` and push the tap from
-`$(brew --repo axklim/tap)`, then tag `v0.1.0` and fill the formula's `sha256`. `RELEASING.md` in the
-tap has both commands.
+The CLI is done: `v0.1.0` is tagged, `Formula/mynah.rb` is in the repo with the real checksum, and
+installing through it was verified end-to-end.
 
-Then either close out **app distribution** — [[0010-homebrew-formula-cli-only]] lists three routes,
+Either close out **app distribution** — [[0010-homebrew-formula-cli-only]] lists three routes,
 the most promising being a formula that installs a *prebuilt* bundle, since formula downloads are not
 quarantined the way cask downloads are — or move to [[Roadmap|Phase 3]]'s polish loop. The three
 translator follow-ups in [[inbox]] are still open, including `⌘C` not copying, which is shipped
