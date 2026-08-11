@@ -8,6 +8,8 @@ APPBIN := mynah-bar
 APPDIR := $(PKGDIR)/dist/$(APP).app
 PLISTIN := $(PKGDIR)/packaging/Info.plist.in
 VERSFILE := $(PKGDIR)/Sources/MynahCore/MynahVersion.swift
+# Run from $(PKGDIR), hence the path relative to it.
+STRIP  := packaging/strip-preview-macros.sh
 
 # The version has exactly one home: MynahVersion.swift. The app bundle's Info.plist is
 # generated from Info.plist.in with this substituted in, so the binary and the bundle can
@@ -37,9 +39,9 @@ help:
 version:
 	@echo $(VERSION)
 
-# Scoped to the CLI product on purpose. Building every target here would also compile
-# MynahBar and its KeyboardShortcuts dependency, which needs full Xcode (see the vault
-# Finding preview-macro-needs-xcode) — the CLI itself builds with the CLT alone.
+# Scoped to the CLI product on purpose. Building every target here would also compile MynahBar
+# and its KeyboardShortcuts dependency, which needs the preview-macro patch the `app` target
+# applies (see the vault Finding preview-macro-needs-xcode) — the CLI needs neither.
 build:
 	cd $(PKGDIR) && swift build -c release --product $(BIN) $(SWIFT_FLAGS)
 
@@ -64,6 +66,8 @@ uninstall:
 
 app: ## build the menu-bar app bundle (dist/Mynah.app)
 	@test -n "$(VERSION)" || { echo "error: no version parsed from $(VERSFILE)"; exit 1; }
+	cd $(PKGDIR) && swift package resolve $(SWIFT_FLAGS)
+	cd $(PKGDIR) && $(STRIP) .build/checkouts
 	cd $(PKGDIR) && swift build -c release --product $(APPBIN) $(SWIFT_FLAGS)
 	rm -rf $(APPDIR)
 	mkdir -p $(APPDIR)/Contents/MacOS

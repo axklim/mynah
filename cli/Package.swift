@@ -11,7 +11,12 @@ let package = Package(
         .executable(name: "mynah-bar", targets: ["MynahBar"])
     ],
     dependencies: [
-        .package(url: "https://github.com/sindresorhus/KeyboardShortcuts", from: "1.9.0")
+        // Pinned exactly, not `from:`. packaging/strip-preview-macros.sh edits this
+        // dependency's Recorder.swift to remove #Preview blocks that only Xcode can expand,
+        // and it verifies the file's checksum first — so the version has to be deterministic
+        // for every user, not just for whoever resolved it last. Bumping this means
+        // re-checking that script. See mynah-vault/Findings/preview-macro-needs-xcode.md.
+        .package(url: "https://github.com/sindresorhus/KeyboardShortcuts", exact: "1.17.0")
     ],
     targets: [
         .target(

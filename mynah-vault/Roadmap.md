@@ -38,25 +38,28 @@ that delivered them.
   Public at **github.com/axklim/mynah**, `main` pushed. Prerequisite for the Homebrew tap in
   [[Roadmap|Phase 2.2]].
 
-- [~] **Phase 2.2 — Distribute via Homebrew** *(CLI done; app deferred —
-  [[0010-homebrew-formula-cli-only]] · [[2026-08-11-session-08-homebrew-distribution]])*
+- [x] **Phase 2.2 — Distribute via Homebrew** *(CLI and app both ship —
+  [[0010-homebrew-formula-cli-only]] · [[0011-formula-builds-the-app-from-source]] ·
+  [[2026-08-11-session-08-homebrew-distribution]])*
   **The `mynah` CLI is installable**: `brew install axklim/mynah/mynah` builds it from source via the
   project's `make install`, verified end-to-end (installed, `brew test`, clean `brew audit --strict`,
   and a real 🟡 verdict from the installed binary). `Formula/mynah.rb` lives in this repo — the repo
   is its own tap, matching `axklim/mbright`; see [[0010-homebrew-formula-cli-only]] for the install
   and release steps.
-  **The menu-bar app is not shipped**, and the reason is a finding, not a shortcut:
-  [[preview-macro-needs-xcode]] — `KeyboardShortcuts` uses `#Preview`, whose macro plugin ships only
-  inside Xcode, so building the app from source would demand ~10 GB of Xcode from every user; and a
-  cask can't take its place while the bundle is only ad-hoc signed, because Homebrew quarantines cask
-  downloads. [[0010-homebrew-formula-cli-only]] records three candidate routes for the app, the most
-  promising being a **formula that installs a prebuilt bundle** (formula downloads aren't
-  quarantined). The font question from [[0008-nerd-font-status-icons]] rides along with the app and is
-  therefore still open; it does not apply to the CLI, which prints emoji.
-  `v0.1.0` is tagged and the formula's `sha256` is filled in. `--version` landed afterwards, so the
-  formula still pins `v0.1.0` and its version assertion fails until **`v0.2.0` is tagged** and the
-  formula's `url`/`sha256` follow — the checksum cannot be read before the tag exists. Steps in
-  [[0010-homebrew-formula-cli-only]].
+  **The menu-bar app now ships too** *(2026-08-11 — [[0011-formula-builds-the-app-from-source]])*:
+  the same formula builds `Mynah.app` from source and installs it, with `brew services start mynah`
+  for login start. What unblocked it was [[preview-macro-needs-xcode]] turning out to be three lines
+  of dead code in a dependency — `make app` strips the `#Preview` blocks out of a checkout pinned at
+  `exact: "1.17.0"`, checksum-guarded, and the app then builds against the CLT SDK with no Xcode.
+  Verified by a keg-only `brew install --build-from-source`: clean `brew audit --strict`, `brew test`
+  green, no quarantine attribute, and the bundle launches. The font question from
+  [[0008-nerd-font-status-icons]] rode along with the app and is now a real rough edge rather than a
+  hypothetical: without the Nerd Font the icons fall back to emoji, and a formula can't depend on a
+  cask.
+  Releases are automated by `.github/workflows/release.yml` (see
+  [[0010-homebrew-formula-cli-only]]); `v0.2.1` is the current tag and the formula pins it. The
+  release still also publishes `mynah-app-<version>.zip`, which nothing installs from now that the
+  formula builds the bundle itself — dropping it is an open follow-up.
 
 - [x] **Phase 2.3 — Ad-hoc translator (En → Ru)** *(design: [[ad-hoc-translator]])*
   A second hotkey that translates the clipboard **English → Russian** into a floating window —
@@ -71,11 +74,12 @@ that delivered them.
   *Was built **ahead of** the distribution track above (branch `ad-hoc-translator`, 2026-08-04);
   numbered after it to keep the phase numbers in order.*
 
-> **Next up.** The distribution track has taken the CLI as far as it goes without the personal
-> account (see Phase 2.2's two remaining steps). Either close out app distribution — pick a route
-> from [[0010-homebrew-formula-cli-only]] — or move to [[Roadmap|Phase 3]]'s polish loop, which can
-> reuse `TranslationPanel` rather than building a second window. Three translator follow-ups are
-> still open in [[inbox]], one of which (`⌘C` doesn't copy) is shipped behaviour.
+> **Next up.** Distribution is closed out — `brew install` now delivers the CLI *and* the menu-bar
+> app ([[0011-formula-builds-the-app-from-source]]). The next release needs a version bump so users
+> get the app-shipping formula. Then [[Roadmap|Phase 3]]'s polish loop, which can reuse
+> `TranslationPanel` rather than building a second window. Still open: the Nerd Font dependency for
+> a Homebrew-installed app ([[0008-nerd-font-status-icons]]), and three translator follow-ups in
+> [[inbox]], one of which (`⌘C` doesn't copy) is shipped behaviour.
 
 - [ ] **Phase 3 — Wire the polish loop into the GUI**
   Input → Claude → one revised version → copy back. Implement the **"use my original / skip"**
