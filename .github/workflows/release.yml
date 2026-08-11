@@ -1,0 +1,131 @@
+name: Release
+
+# Manual on purpose. A release is a decision, not a consequence of pushing to main.
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release, without the leading v (e.g. 0.2.0)"
+        required: true
+
+permissions:
+  contents: write
+
+# Why the steps are in this order, and why it cannot be shortened: Homebrew pins a
+# release to a tag's tarball *and* that tarball's checksum, and the checksum cannot be
+# read before the tag exists. So the formula bump is always a commit *after* the tag.
+# That is the manual dance this workflow replaces — see Decision 0010.
+jobs:
+  release:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Validate the version and refuse to reuse a tag
+        run: |
+          set -euo pipefail
+          V="${{ inputs.version }}"
+          echo "$V" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$' \
+            || { echo "::error::version must be X.Y.Z, got '$V'"; exit 1; }
+          if git rev-parse "v$V" >/dev/null 2>&1; then
+            echo "::error::tag v$V already exists"; exit 1
+          fi
+
+      - name: Bump the version in its single home
+        run: |
+          set -euo pipefail
+          V="${{ inputs.version }}"
+          F=cli/Sources/MynahCore/MynahVersion.swift
+          sed -i '' "s/current = \".*\"/current = \"$V\"/" "$F"
+          # Trust `make version` over the sed above: if the file's shape ever changes,
+          # this is where we find out, not three steps later in a broken release.
+          test "$(make version)" = "$V" || { echo "::error::make version disagrees"; exit 1; }
+
+      - name: Test and build before tagging anything
+        run: |
+          set -euo pipefail
+          make test
+          make build
+          make app
+          test "$(./cli/.build/release/mynah --version)" = "${{ inputs.version }}"
+
+      - name: Commit the bump and tag it
+        run: |
+          set -euo pipefail
+          V="${{ inputs.version }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -am "Release v$V"
+          git tag -a "v$V" -m "mynah $V"
+          git push origin main
+          git push origin "v$V"
+
+      - name: Point the formula at the new tarball
+        run: |
+          set -euo pipefail
+          V="${{ inputs.version }}"
+          URL="https://github.com/${{ github.repository }}/archive/refs/tags/v$V.tar.gz"
+          SHA="$(curl -fsSL "$URL" | shasum -a 256 | cut -d' ' -f1)"
+          test -n "$SHA"
+          sed -i '' -e "s|^  url \".*\"|  url \"$URL\"|" \
+                    -e "s|^  sha256 \".*\"|  sha256 \"$SHA\"|" Formula/mynah.rb
+          git commit -am "Bump the formula to v$V"
+          git push origin main
+
+      - name: Package the app bundle
+        # Wrapped in a versioned directory rather than zipping Mynah.app directly:
+        # Homebrew strips a single top-level directory when unpacking, and a bare
+        # .app IS one — a future prebuilt-install formula would unpack into the
+        # bundle's Contents. The wrapper keeps `prefix.install "Mynah.app"` working.
+        run: |
+          set -euo pipefail
+          V="${{ inputs.version }}"
+          mkdir -p "dist/mynah-app-$V"
+          cp -R cli/dist/Mynah.app "dist/mynah-app-$V/"
+          (cd dist && zip -qry "mynah-app-$V.zip" "mynah-app-$V")
+          shasum -a 256 "dist/mynah-app-$V.zip" | tee dist/app-sha256.txt
+
+      - name: Verify a clean install through the tap
+        # The real gate: tap the published repo the way a user would and install from
+        # the tag we just cut. `brew test` asserts `mynah --version` matches the
+        # version Homebrew derived from the URL, so a botched bump fails here.
+        run: |
+          set -euo pipefail
+          brew tap axklim/mynah "https://github.com/${{ github.repository }}"
+          brew trust --formula axklim/mynah/mynah
+          brew install --build-from-source axklim/mynah/mynah
+          brew test mynah
+          brew audit --strict --formula axklim/mynah/mynah
+
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          V="${{ inputs.version }}"
+          APP_SHA="$(cut -d' ' -f1 dist/app-sha256.txt)"
+          cat > notes.md <<EOF
+          ## Install the CLI
+
+          \`\`\`sh
+          brew tap axklim/mynah https://github.com/${{ github.repository }}
+          brew trust --formula axklim/mynah/mynah
+          brew install axklim/mynah/mynah
+          \`\`\`
+
+          Needs an authenticated \`claude\` CLI — there is no API key.
+
+          ## Menu-bar app
+
+          \`mynah-app-$V.zip\` is the prebuilt, ad-hoc-signed \`Mynah.app\`, attached because
+          building it from source needs full Xcode (a dependency uses \`#Preview\`, whose macro
+          plugin is Xcode-only). Unzip it and move \`Mynah.app\` where you like; macOS will not
+          quarantine it, since it did not arrive via a browser.
+
+          sha256: \`$APP_SHA\`
+          EOF
+          gh release create "v$V" "dist/mynah-app-$V.zip" \
+            --title "mynah $V" --notes-file notes.md

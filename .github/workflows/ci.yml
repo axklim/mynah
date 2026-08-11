@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# Note on what is NOT here: there are no integration tests. Every `mynah check`
+# and `mynah translate` shells out to an authenticated `claude` CLI (Decision 0006),
+# which CI has no way to sign in to. Build and unit tests are the honest ceiling.
+jobs:
+  build-and-test:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Unit tests
+        run: make test
+
+      - name: Build the CLI
+        run: make build
+
+      # Needs full Xcode, which the runner image has and a plain CLT machine does
+      # not — see mynah-vault/Findings/preview-macro-needs-xcode.md. This step is
+      # therefore the only automated check that the app still compiles at all.
+      - name: Build the app bundle
+        run: make app
+
+      - name: Version is consistent across the binary and the bundle
+        run: |
+          set -euo pipefail
+          expected="$(make version)"
+          binary="$(./cli/.build/release/mynah --version)"
+          bundle="$(/usr/libexec/PlistBuddy -c 'Print CFBundleShortVersionString' \
+            cli/dist/Mynah.app/Contents/Info.plist)"
+          echo "make=$expected binary=$binary bundle=$bundle"
+          test "$binary" = "$expected"
+          test "$bundle" = "$expected"
+
+  formula:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      # Tapping this repo by URL is how users install it, so audit it the same way
+      # rather than linting the file in isolation.
+      - name: Tap this checkout and audit the formula
+        run: |
+          set -euo pipefail
+          brew tap axklim/mynah "file://$PWD"
+          # Homebrew 6 refuses formulae from untrusted third-party taps, and trust is
+          # keyed to the tap URL — so CI has to trust it exactly like a user does.
+          brew trust --formula axklim/mynah/mynah
+          brew audit --strict --formula axklim/mynah/mynah

@@ -58,6 +58,12 @@ a tag followed by a formula bump — the checksum cannot exist before the tag do
 has **one** home, `MynahVersion.swift`; `make app` generates `Info.plist` from `Info.plist.in` with it
 substituted in, so the binary and the bundle cannot disagree.
 
+**This is now automated** — run the **Release** workflow (`.github/workflows/release.yml`) from the
+Actions tab with a version like `0.2.0` and it performs every step below, refusing to reuse an
+existing tag and verifying a clean `brew install` from the published tag before it publishes the
+release. The manual sequence is kept here because it is what the workflow does, and it is the
+fallback when the workflow is unavailable:
+
 1. Bump `MynahVersion.current` in `cli/Sources/MynahCore/MynahVersion.swift`. Commit to `main`.
 2. `git tag -a v0.2.0 -m "mynah 0.2.0" && git push origin v0.2.0`
 3. `curl -sL https://github.com/axklim/mynah/archive/refs/tags/v0.2.0.tar.gz | shasum -a 256`
@@ -86,17 +92,34 @@ not the tarball's copy.
 - Tagging pushes to `axklim/mynah`, which needs the **personal** account — a work-authed session can
   push to the fork and open a PR, but not tag the release.
 
-## Open question — how the app eventually ships
+## Update (2026-08-11) — the prebuilt route is verified, and the cask route is closing
 
-Deliberately left open. Three candidates, in rough order of preference:
+**Route 1 works. Measured, not assumed.** A throwaway formula that installed a zipped, ad-hoc-signed
+`Mynah.app` from a local URL produced an installed bundle with **zero** `com.apple.quarantine`
+attributes, and it **launched via `open`** (confirmed by its running pid out of the Cellar). Formula
+downloads are not quarantined the way cask downloads are — checked independently against bottled
+formulae already on this machine, whose binaries also carry no quarantine attribute.
 
-1. **Formula installs a prebuilt app.** Formula downloads are *not* quarantined (unlike casks), so an
-   ad-hoc-signed `Mynah.app` attached to a GitHub release could be installed by a formula and launch
-   without Gatekeeper friction, with no Xcode and no notarization. Needs verifying rather than
-   assuming, and the build would want `--arch arm64 --arch x86_64` to be universal.
-2. **Cask + notarization.** The correct long-term answer; costs a Developer ID subscription.
-3. **Second formula `mynah-bar` with `depends_on xcode: :build`.** Honest, works today, but asks
-   users for Xcode.
+Note `spctl -a --type execute` still reports **rejected** for the bundle, and that is not a
+contradiction: `spctl` is the *assessment* API, which gates quarantined files. With no quarantine
+attribute there is no assessment at launch. Do not "fix" this by reaching for notarization on the
+strength of an `spctl` result alone.
+
+**Route 2 is closing.** Homebrew is ending support for casks that fail Gatekeeper checks on
+**1 September 2026** and deprecating `--no-quarantine` ([Homebrew/brew#20755]). For an un-notarized
+bundle the cask route is not merely awkward, it is about to be unavailable — so the choice is
+effectively route 1 or paying for a Developer ID.
+
+So: **releases now carry `mynah-app-<version>.zip`**, built by CI on a macOS runner — which has Xcode
+preinstalled, and is therefore the natural home for the one build step users cannot perform
+([[preview-macro-needs-xcode]]). Shipping it *through a formula* is the remaining step, and it is now
+a known-good path rather than a guess. The bundle is arm64-only; a universal build would want
+`--arch arm64 --arch x86_64`.
+
+Route 3 (a second formula with `depends_on xcode: :build`) is now clearly the worst option and can be
+dropped.
+
+[Homebrew/brew#20755]: https://github.com/Homebrew/brew/issues/20755
 
 ## Related
 
