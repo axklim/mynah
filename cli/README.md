@@ -1,4 +1,4 @@
-# spell-checker — CLI evaluator + menu-bar app
+# mynah — CLI evaluator + menu-bar app
 
 Evaluates a message and returns **one** traffic-light verdict — 🔴 / 🟡 / 🟢 — and nothing else.
 It does not rewrite the text.
@@ -9,12 +9,12 @@ It does not rewrite the text.
 
 `red` is **comprehension-only**: grammar mistakes alone stay yellow as long as the meaning is
 clear. Criteria + prompt:
-[traffic-light-eval](../spell-checker-vault/Design/traffic-light-eval.md).
+[traffic-light-eval](../mynah-vault/Design/traffic-light-eval.md).
 
 Backend: `claude -p --model sonnet` (Claude Code CLI in print mode) behind a `TextEvaluator`
 abstraction — no API key needed. See
-[Decision 0006](../spell-checker-vault/Decisions/0006-polish-backend-claude-cli.md) and
-[Decision 0007](../spell-checker-vault/Decisions/0007-traffic-light-evaluator-first.md).
+[Decision 0006](../mynah-vault/Decisions/0006-polish-backend-claude-cli.md) and
+[Decision 0007](../mynah-vault/Decisions/0007-traffic-light-evaluator-first.md).
 
 ## Requirements
 
@@ -26,7 +26,7 @@ abstraction — no API key needed. See
 From the repo root:
 
 ```sh
-make install          # builds release, installs `spell-checker` to ~/.local/bin
+make install          # builds release, installs `mynah` to ~/.local/bin
 ```
 
 Override the location with `make install PREFIX=/usr/local`; remove with `make uninstall`.
@@ -34,27 +34,27 @@ Override the location with `make install PREFIX=/usr/local`; remove with `make u
 ## Usage
 
 ```sh
-spell-checker check "Please send the file to Anna and her assistant when she is ready."
+mynah check "Please send the file to Anna and her assistant when she is ready."
 # → 🔴 red
 
-pbpaste | spell-checker check
-echo "Thanks for the review, I've merged the branch." | spell-checker check
+pbpaste | mynah check
+echo "Thanks for the review, I've merged the branch." | mynah check
 # → 🟢 green
 
-spell-checker --help
+mynah --help
 ```
 
 Prints just the verdict to stdout; errors go to stderr with a non-zero exit code. Input over 2000
 characters is rejected as a likely misclick (`InputText.characterLimit` in
-`SpellCheckerCore`).
+`MynahCore`).
 
 ```
-spell-checker translate <text>     Translate English → Russian
-spell-checker translate            Read the text from stdin
+mynah translate <text>     Translate English → Russian
+mynah translate            Read the text from stdin
 ```
 
 ```
-$ spell-checker translate commit
+$ mynah translate commit
 commit
   1. совершать (что-то), делать — to do or carry out an action, especially a crime or mistake
      "He committed a serious error in the report."
@@ -69,12 +69,12 @@ The final line appears only when the word has further common meanings that were 
 
 Direction is English → Russian only; there is no autodetection, so pasting Russian is undefined.
 Three or more words return the translation alone, which is what makes
-`pbpaste | spell-checker translate | pbcopy` round-trip cleanly.
+`pbpaste | mynah translate | pbcopy` round-trip cleanly.
 
 ## Dev (without installing)
 
 ```sh
-cd cli && swift run spell-checker check "some text"
+cd cli && swift run mynah check "some text"
 ```
 
 ## Menu-bar app (Phase 2)
@@ -94,12 +94,12 @@ window and cancels the call. Because the window is this feature's whole UI, an e
 clipboard is reported as a sentence inside it rather than as a menu-bar icon.
 
 ```sh
-make app        # build dist/SpellChecker.app
+make app        # build dist/Mynah.app
 make run-app    # build and open it
 ```
 
 It's an accessory app (no Dock icon) and quits from its menu. The shortcut is hardcoded for now;
-a rebind UI is planned (see the vault inbox). Dev run without bundling: `cd cli && swift run spell-checker-bar`.
+a rebind UI is planned (see the vault inbox). Dev run without bundling: `cd cli && swift run mynah-bar`.
 
 ## Swapping the backend later
 

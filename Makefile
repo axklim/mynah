@@ -1,10 +1,10 @@
-# Spell Checker — build & install the CLI (cli/ SwiftPM package)
+# Mynah — build & install the CLI (cli/ SwiftPM package)
 PREFIX ?= $(HOME)/.local
 BINDIR := $(PREFIX)/bin
 PKGDIR := cli
-BIN    := spell-checker
-APP    := SpellChecker
-APPBIN := spell-checker-bar
+BIN    := mynah
+APP    := Mynah
+APPBIN := mynah-bar
 APPDIR := $(PKGDIR)/dist/$(APP).app
 PLIST  := $(PKGDIR)/packaging/Info.plist
 
@@ -13,12 +13,12 @@ PLIST  := $(PKGDIR)/packaging/Info.plist
 
 help:
 	@echo "Targets:"
-	@echo "  make install     build release and install spell-checker to $(BINDIR)"
+	@echo "  make install     build release and install mynah to $(BINDIR)"
 	@echo "  make build       build the release binary (no install)"
 	@echo "  make test        run the swift test suite"
 	@echo "  make uninstall   remove the installed binary"
 	@echo "  make clean       remove build artifacts"
-	@echo "  make app         build the menu-bar app bundle (dist/SpellChecker.app)"
+	@echo "  make app         build the menu-bar app bundle (dist/Mynah.app)"
 	@echo "  make run-app     build the app bundle and open it"
 
 build:
@@ -43,7 +43,7 @@ uninstall:
 	rm -f $(BINDIR)/$(BIN)
 	@echo "removed $(BINDIR)/$(BIN)"
 
-app: ## build the menu-bar app bundle (dist/SpellChecker.app)
+app: ## build the menu-bar app bundle (dist/Mynah.app)
 	cd $(PKGDIR) && swift build -c release --product $(APPBIN)
 	rm -rf $(APPDIR)
 	mkdir -p $(APPDIR)/Contents/MacOS

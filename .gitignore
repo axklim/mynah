@@ -16,6 +16,7 @@ Icon?
 
 # Claude Code — local agent state (not project source)
 .claude/agent-memory/
+.claude/settings.local.json
 
 # Swift Package Manager
 .build/
