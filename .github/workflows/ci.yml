@@ -12,10 +12,24 @@ jobs:
   build-and-test:
     runs-on: macos-15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
+
+      # IconFontCoverageTests skips itself when this font is absent — Decision 0008's
+      # emoji fallback, which on a bare runner quietly retired the only automated check
+      # on the codepoints that Finding nerd-font-codepoint-identity says must be verified.
+      - name: Install the Nerd Font the icon-coverage test needs
+        run: brew install --cask font-jetbrains-mono-nerd-font
 
       - name: Unit tests
-        run: make test
+        run: |
+          set -euo pipefail
+          make test 2>&1 | tee test.log
+          # A skip here means the check above is not actually running. Fail loudly
+          # rather than reporting green on a test that never executed.
+          if grep -q "skipped" test.log; then
+            echo "::error::a test skipped — CI is meant to run the whole suite"
+            exit 1
+          fi
 
       - name: Build the CLI
         run: make build
@@ -40,7 +54,7 @@ jobs:
   formula:
     runs-on: macos-15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # Tapping this repo by URL is how users install it, so audit it the same way
       # rather than linting the file in isolation.
