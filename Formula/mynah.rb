@@ -1,8 +1,8 @@
 class Mynah < Formula
   desc "Rate how clearly a message reads, and translate English to Russian, via Claude"
   homepage "https://github.com/axklim/mynah"
-  url "https://github.com/axklim/mynah/archive/refs/tags/v0.1.0.tar.gz"
-  sha256 "5fa8c9604415f6dd9a2d5bf441786e285ddb5890720cb2a39cd86089d8b54a48"
+  url "https://github.com/axklim/mynah/archive/refs/tags/v0.2.1.tar.gz"
+  sha256 "e1d742dcb78bee3e0d64b257c6a6f2cd60794cb0ec4273800274f91803f4542f"
   head "https://github.com/axklim/mynah.git", branch: "main"
 
   # Package.swift targets .macOS(.v13); Info.plist sets LSMinimumSystemVersion 13.0.
