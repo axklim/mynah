@@ -63,6 +63,30 @@ project code, so no decision was ever made about it and nothing in the repo ment
 - **If CLT-only for the app ever matters**, the options are to drop `KeyboardShortcuts` for a
   direct Carbon `RegisterEventHotKey` call (the library is a thin wrapper over it), or to patch
   the previews out of the checkout at build time. Neither is worth doing today.
+  → It started mattering the same day: see the resolution below.
+
+## Resolution (2026-08-11) — patched out, and the app now builds CLT-only
+
+The second option was taken, because the caveat it forced on the Homebrew formula ("clone the repo
+and run `make app`") was shipping the wrong half of the project. `make app` now runs
+`cli/packaging/strip-preview-macros.sh` between `swift package resolve` and `swift build`; it
+truncates `Recorder.swift` at the first `#Preview`, re-closes the trailing `#if os(macOS)`, and
+**checks the file's sha256 first** so a dependency bump fails loudly instead of quietly mangling a
+file it does not recognise. `Package.swift` pins `KeyboardShortcuts` `exact: "1.17.0"` to make that
+checksum meaningful for every user, not just whoever resolved last. Full reasoning in
+[[0011-formula-builds-the-app-from-source]].
+
+Two things measured while doing it, both worth keeping:
+
+- **The macro was the *only* Xcode-only construct in the app.** With the previews gone,
+  `mynah-bar` links against the CLT SDK in 7.6 s. So [[0003-build-toolchain-xcode-later]]'s
+  CLT-only claim is now true of the whole project again — the caveat above was entirely about one
+  dependency's dead code.
+- **SwiftPM checks its checkouts out read-only** (`-r--r--r--`), so the patch has to `chmod u+w`
+  before writing.
+
+The first option — replacing the library with a direct Carbon `RegisterEventHotKey` call — remains
+the durable fix if the pin ever becomes a burden.
 
 ## Related
 

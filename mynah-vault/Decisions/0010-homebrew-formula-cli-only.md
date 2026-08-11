@@ -1,6 +1,10 @@
 # 0010 — Homebrew ships the CLI as a from-source formula; the app waits
 
-- **Status:** accepted (the app half is still open — see Open question below)
+- **Status:** accepted for the CLI. **The app half is superseded by
+  [[0011-formula-builds-the-app-from-source]]** (2026-08-11), which builds the app from source in
+  the same formula by patching the Xcode-only previews out of the pinned dependency. Route 1
+  (install the prebuilt zip) was verified and is no longer needed; the release/versioning steps
+  below are still current.
 - **Date:** 2026-08-11
 - **Relates to:** [[0003-build-toolchain-xcode-later]] · [[0008-nerd-font-status-icons]] ·
   [[preview-macro-needs-xcode]] · [[Roadmap|Phase 2.2]]

@@ -34,8 +34,8 @@ paste into ChatGPT with a fixed prompt → copy the result back. This app takes 
 | LLM             | Anthropic Claude — Haiku for polishing; Sonnet for evaluation/analysis (Haiku under-detected ambiguity — see Findings) |
 | Invocation      | Menu bar app + global hotkey → popup; larger window for the dashboard    |
 | Language / UI   | Swift 6 / SwiftUI + AppKit                                               |
-| Build toolchain | `swift` CLT + `make`, no Xcode project (`make app` bundles the GUI). AppKit/SwiftUI come with the CLT SDK, but **`mynah-bar` still needs full Xcode** — a dependency uses `#Preview`, whose macro plugin is Xcode-only (Decision 0003's correction · Finding `preview-macro-needs-xcode`). The `mynah` CLI is CLT-only. |
-| Distribution    | Homebrew, repo-as-tap: `Formula/mynah.rb` lives here and builds the **CLI** from source (Decision 0010 has the install and release steps). App distribution is unsolved. |
+| Build toolchain | `swift` CLT + `make`, no Xcode project (`make app` bundles the GUI). **Neither product needs Xcode**: AppKit/SwiftUI ship in the CLT SDK, and `make app` strips the Xcode-only `#Preview` blocks out of the pinned `KeyboardShortcuts` checkout before building (Decision 0011 · Finding `preview-macro-needs-xcode`) |
+| Distribution    | Homebrew, repo-as-tap: `Formula/mynah.rb` lives here and builds **both `mynah` and `Mynah.app`** from source (Decision 0010 has the install and release steps; Decision 0011 covers the app) |
 | Secrets         | Keychain (future GUI). The CLI evaluator needs no API key — it shells out to an authed `claude -p` (Decision 0006) |
 | Storage         | Local, on-device (message text is sensitive — see Privacy in vault)      |
 
@@ -50,8 +50,9 @@ and may contain hyphens; module names are CamelCase and can't — see `cli/Packa
 CLI targets:
 
 - `brew tap axklim/mynah https://github.com/axklim/mynah` + `brew trust --formula
-  axklim/mynah/mynah` + `brew install axklim/mynah/mynah` — the installed path for the CLI. The
-  repo is its own tap, so there is no auto-tap and the URL form is required (Decision 0010)
+  axklim/mynah/mynah` + `brew install axklim/mynah/mynah` — the installed path, and it now brings
+  **both** the CLI and `Mynah.app` (`brew services start mynah` runs the app at login). The repo is
+  its own tap, so there is no auto-tap and the URL form is required (Decisions 0010, 0011)
 - `make install` — build release + install `mynah` to `~/.local/bin` (override `PREFIX=…`).
   Pass `SWIFT_FLAGS=…` to add `swift build` flags; the formula uses it for `--disable-sandbox`,
   since a Homebrew build can't nest SwiftPM's own sandbox.
