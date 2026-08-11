@@ -58,7 +58,14 @@ jobs:
           V="${{ inputs.version }}"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -am "Release v$V"
+          # main may already carry the target version — the constant is bumped in the
+          # PR that adds the feature as often as not. `git commit` exits non-zero with
+          # nothing staged, which under `set -e` would abort the release at the tag.
+          if git diff --quiet HEAD; then
+            echo "MynahVersion.swift is already $V; nothing to commit"
+          else
+            git commit -am "Release v$V"
+          fi
           git tag -a "v$V" -m "mynah $V"
           git push origin main
           git push origin "v$V"
@@ -72,7 +79,13 @@ jobs:
           test -n "$SHA"
           sed -i '' -e "s|^  url \".*\"|  url \"$URL\"|" \
                     -e "s|^  sha256 \".*\"|  sha256 \"$SHA\"|" Formula/mynah.rb
-          git commit -am "Bump the formula to v$V"
+          # Same guard: re-running the workflow for an already-current formula would
+          # otherwise fail here rather than proceeding to verify and publish.
+          if git diff --quiet HEAD; then
+            echo "formula already points at v$V"
+          else
+            git commit -am "Bump the formula to v$V"
+          fi
           git push origin main
 
       - name: Package the app bundle
