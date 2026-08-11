@@ -33,20 +33,27 @@ that delivered them.
 > **Distribution track (do before Phase 3).** Get the project onto a public remote and
 > installable before adding more features — requested 2026-07-16.
 
-- [ ] **Phase 2.1 — Publish to GitHub**
-  Create the GitHub repository and push `main`. This is the prerequisite for the Homebrew tap in
-  [[Roadmap|Phase 2.2]] (the formula points at a GitHub repo/release).
+- [x] **Phase 2.1 — Publish to GitHub** *(done 2026-08-11, retroactively checked off in
+  [[2026-08-11-session-08-homebrew-distribution]])*
+  Public at **github.com/axklim/mynah**, `main` pushed. Prerequisite for the Homebrew tap in
+  [[Roadmap|Phase 2.2]].
 
-- [ ] **Phase 2.2 — Distribute via Homebrew**
-  Ship `mynah` (and, if practical, the menu-bar app) through a Homebrew tap/formula so it
-  installs with `brew install`. Depends on Phase 2.1.
-  **Don't forget the font dependency.** The menu-bar icons are Nerd Font glyphs
-  ([[0008-nerd-font-status-icons]]), so the app **cask** should declare
-  `depends_on cask: "font-jetbrains-mono-nerd-font"` — or bundle `SymbolsNerdFont` in
-  `Contents/Resources` and register it at launch, dropping the dependency. Confirm the cask DSL
-  against Homebrew's docs then; a plain **formula** can't depend on a cask, so the CLI stays
-  font-free (it prints emoji). The app falls back to emoji if the font is missing, so a miss here
-  degrades rather than breaks.
+- [~] **Phase 2.2 — Distribute via Homebrew** *(CLI done; app deferred —
+  [[0010-homebrew-formula-cli-only]] · [[2026-08-11-session-08-homebrew-distribution]])*
+  **The `mynah` CLI is installable**: `brew install axklim/tap/mynah` builds it from source via the
+  project's `make install`, verified end-to-end (installed, `brew test`, clean `brew audit --strict`,
+  and a real 🟡 verdict from the installed binary). The formula lives in the tap repo only.
+  **The menu-bar app is not shipped**, and the reason is a finding, not a shortcut:
+  [[preview-macro-needs-xcode]] — `KeyboardShortcuts` uses `#Preview`, whose macro plugin ships only
+  inside Xcode, so building the app from source would demand ~10 GB of Xcode from every user; and a
+  cask can't take its place while the bundle is only ad-hoc signed, because Homebrew quarantines cask
+  downloads. [[0010-homebrew-formula-cli-only]] records three candidate routes for the app, the most
+  promising being a **formula that installs a prebuilt bundle** (formula downloads aren't
+  quarantined). The font question from [[0008-nerd-font-status-icons]] rides along with the app and is
+  therefore still open; it does not apply to the CLI, which prints emoji.
+  **Two steps remain, and both need the personal GitHub account** (this session was work-authed):
+  create `axklim/homebrew-tap` and push the tap, then tag `v0.1.0` and fill the formula's `sha256`.
+  See `RELEASING.md` in the tap.
 
 - [x] **Phase 2.3 — Ad-hoc translator (En → Ru)** *(design: [[ad-hoc-translator]])*
   A second hotkey that translates the clipboard **English → Russian** into a floating window —
@@ -61,8 +68,11 @@ that delivered them.
   *Was built **ahead of** the distribution track above (branch `ad-hoc-translator`, 2026-08-04);
   numbered after it to keep the phase numbers in order.*
 
-> **Next up.** With Phase 2.3 done, the distribution track above — Phase 2.1 (GitHub) then Phase
-> 2.2 (Homebrew) — is next, before Phase 3's polish loop.
+> **Next up.** The distribution track has taken the CLI as far as it goes without the personal
+> account (see Phase 2.2's two remaining steps). Either close out app distribution — pick a route
+> from [[0010-homebrew-formula-cli-only]] — or move to [[Roadmap|Phase 3]]'s polish loop, which can
+> reuse `TranslationPanel` rather than building a second window. Three translator follow-ups are
+> still open in [[inbox]], one of which (`⌘C` doesn't copy) is shipped behaviour.
 
 - [ ] **Phase 3 — Wire the polish loop into the GUI**
   Input → Claude → one revised version → copy back. Implement the **"use my original / skip"**

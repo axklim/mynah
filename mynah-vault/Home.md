@@ -38,13 +38,16 @@ and learns from their recurring mistakes to teach better English over time. Full
   - [[0007-traffic-light-evaluator-first]]
   - [[0008-nerd-font-status-icons]]
   - [[0009-rename-to-mynah]]
+  - [[0010-homebrew-formula-cli-only]]
 - ❓ [[open-questions]] — unresolved decisions
 - 💡 [[inbox]] — quick idea capture
 - 🔎 [[toolchain-notes]] — environment findings
 - 🧪 **Findings** — [[haiku-misses-ambiguity]] · [[gui-claude-subprocess-tcc-prompt]] ·
-  [[nerd-font-codepoint-identity]] · [[keyboardshortcuts-persists-its-default]]
+  [[nerd-font-codepoint-identity]] · [[keyboardshortcuts-persists-its-default]] ·
+  [[preview-macro-needs-xcode]]
 - 📓 **Sessions** — [[2026-06-23-session-01-foundation]] · [[2026-06-23-session-02-cli-prototype]] · [[2026-06-24-session-03-traffic-light-evaluator]] · [[2026-06-25-session-04-menubar-evaluator]] · [[2026-08-04-session-05-translator-slice-1]] ·
-  [[2026-08-05-session-06-translator-slice-2]] · [[2026-08-05-session-07-translator-slice-3]]
+  [[2026-08-05-session-06-translator-slice-2]] · [[2026-08-05-session-07-translator-slice-3]] ·
+  [[2026-08-11-session-08-homebrew-distribution]]
 
 ## How to use this vault
 

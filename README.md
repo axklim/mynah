@@ -19,8 +19,14 @@ The CLI also translates English into Russian — `mynah translate "<text>"` — 
 three meanings for a single word or short phrase, or just the translation for anything longer.
 
 ```sh
-make install      # builds + installs `mynah` to ~/.local/bin
+brew install axklim/tap/mynah                       # once the tap is published
 mynah check "i has finished the task and it works good"
+```
+
+Or build it yourself:
+
+```sh
+make install      # builds + installs `mynah` to ~/.local/bin
 ```
 
 Or run it as a menu-bar app — `make run-app`, then press **⌃⌥⌘C** (Hyper+C) to rate whatever's on the
@@ -29,7 +35,10 @@ clipboard; the tray icon shows the verdict for a few seconds. See [`cli/`](cli/R
 A second hotkey (**⌃⌥⌘⇧C**) translates the clipboard from English to Russian into a floating
 window, for understanding what someone wrote to you.
 
-Needs a Swift 6 toolchain and an authenticated `claude` CLI — no API key.
+Needs an authenticated `claude` CLI — no API key. The CLI builds with the Swift Command Line
+Tools; the menu-bar app currently needs full Xcode, because a dependency uses `#Preview`
+(`mynah-vault/Findings/preview-macro-needs-xcode.md`), which is also why `brew install` ships
+the CLI only.
 
 ## Where the knowledge lives
 

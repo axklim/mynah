@@ -8,6 +8,12 @@ APPBIN := mynah-bar
 APPDIR := $(PKGDIR)/dist/$(APP).app
 PLIST  := $(PKGDIR)/packaging/Info.plist
 
+# Extra flags for `swift build`. Empty for normal development — SwiftPM's own sandbox
+# around manifest compilation is worth keeping locally. The Homebrew formula passes
+# `--disable-sandbox`, because a brew build already runs inside a sandbox and nesting
+# sandbox-exec fails with "Invalid manifest".
+SWIFT_FLAGS ?=
+
 .PHONY: help build test install uninstall clean app run-app
 .DEFAULT_GOAL := help
 
@@ -21,8 +27,11 @@ help:
 	@echo "  make app         build the menu-bar app bundle (dist/Mynah.app)"
 	@echo "  make run-app     build the app bundle and open it"
 
+# Scoped to the CLI product on purpose. Building every target here would also compile
+# MynahBar and its KeyboardShortcuts dependency, which needs full Xcode (see the vault
+# Finding preview-macro-needs-xcode) — the CLI itself builds with the CLT alone.
 build:
-	cd $(PKGDIR) && swift build -c release
+	cd $(PKGDIR) && swift build -c release --product $(BIN) $(SWIFT_FLAGS)
 
 test:
 	cd $(PKGDIR) && swift test
@@ -44,7 +53,7 @@ uninstall:
 	@echo "removed $(BINDIR)/$(BIN)"
 
 app: ## build the menu-bar app bundle (dist/Mynah.app)
-	cd $(PKGDIR) && swift build -c release --product $(APPBIN)
+	cd $(PKGDIR) && swift build -c release --product $(APPBIN) $(SWIFT_FLAGS)
 	rm -rf $(APPDIR)
 	mkdir -p $(APPDIR)/Contents/MacOS
 	cp $(PKGDIR)/.build/release/$(APPBIN) $(APPDIR)/Contents/MacOS/$(APP)
