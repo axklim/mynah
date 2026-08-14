@@ -4,5 +4,5 @@
 /// asserts that `mynah --version` matches the release tarball it built from — so bumping
 /// this one line is the whole version bump. See `make version` and Decision 0010.
 public enum MynahVersion {
-    public static let current = "0.2.1"
+    public static let current = "0.3.0"
 }
