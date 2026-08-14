@@ -47,8 +47,8 @@ public struct TranslationView: View {
                     .foregroundStyle(.secondary)
             }
 
-        case .text(let russian):
-            Text(russian)
+        case .text(let translation):
+            Text(translation)
                 .textSelection(.enabled)
 
         case .word(let source, let meanings, let hasMore):

@@ -14,7 +14,7 @@ It also rebinds the existing checker, and back-fills a guard the checker never h
 
 | Question | Decision |
 |---|---|
-| Direction | **En → Ru only.** No autodetection. Pasting Russian is undefined behaviour, accepted knowingly. |
+| Direction | **En → Ru only.** No autodetection. Pasting Russian is undefined behaviour, accepted knowingly. — **Superseded** by [[configurable-language-pair]]: the direction is now a config setting, both sides configurable, default flipped to **En → De**. Kept here verbatim as the original decision this project shipped with. |
 | Input | The **clipboard**, same as the checker. Not the selection (that needs Accessibility permission). |
 | Length limit | **2000 characters**, shared by both features. |
 | Word vs text | **1–2 words** → word mode. **3+** → text mode. |

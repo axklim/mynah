@@ -15,8 +15,10 @@ Two pillars:
 A first prototype lives in [`cli/`](cli/README.md): a `mynah check` command that rates
 a message 🔴 / 🟡 / 🟢 (no rewrite yet).
 
-The CLI also translates English into Russian — `mynah translate "<text>"` — returning up to
-three meanings for a single word or short phrase, or just the translation for anything longer.
+The CLI also translates between a configured language pair, defaulting to **English → German** —
+`mynah translate "<text>"` — returning up to three meanings for a single word or short phrase, or
+just the translation for anything longer. See [`cli/`](cli/README.md#configuration) for how to
+change the pair.
 
 ```sh
 brew tap axklim/mynah https://github.com/axklim/mynah
@@ -35,8 +37,8 @@ make install      # builds + installs `mynah` to ~/.local/bin
 Or run it as a menu-bar app — `make run-app`, then press **⌃⌥⌘C** (Hyper+C) to rate whatever's on the
 clipboard; the tray icon shows the verdict for a few seconds. See [`cli/`](cli/README.md).
 
-A second hotkey (**⌃⌥⌘⇧C**) translates the clipboard from English to Russian into a floating
-window, for understanding what someone wrote to you.
+A second hotkey (**⌃⌥⌘⇧C**) translates the clipboard between the configured pair (default
+**English → German**) into a floating window, for understanding what someone wrote to you.
 
 Needs an authenticated `claude` CLI — no API key. The CLI builds with the Swift Command Line
 Tools; the menu-bar app currently needs full Xcode, because a dependency uses `#Preview`

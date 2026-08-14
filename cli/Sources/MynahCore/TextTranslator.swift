@@ -1,7 +1,7 @@
 /// Which shape of answer the input deserves.
 ///
 /// A short input is a vocabulary lookup — the developer wants meanings, not a
-/// sentence. Anything longer is prose they want to read in Russian.
+/// sentence. Anything longer is prose they want to read in the target language.
 public enum TranslationMode: Sendable, Equatable {
     /// 1–2 words: up to three meanings, each explained with an example.
     case word
@@ -16,15 +16,15 @@ public enum TranslationMode: Sendable, Equatable {
     }
 }
 
-/// One Russian meaning of an English word, with teaching material.
+/// One target-language meaning of a source-language word, with teaching material.
 ///
-/// The explanation and example are in **simple English** on purpose: the
-/// translation answers "what does this mean", and the English around it is what
-/// makes the meaning stick.
+/// The explanation and example are in **simple source-language** prose on purpose:
+/// the translation answers "what does this mean", and the source-language text
+/// around it is what makes the meaning stick.
 public struct WordMeaning: Sendable, Equatable, Codable {
-    public let translation: String   // Russian
-    public let explanation: String   // simple English
-    public let example: String       // simple English
+    public let translation: String   // target language
+    public let explanation: String   // simple source language
+    public let example: String       // simple source language
 
     public init(translation: String, explanation: String, example: String) {
         self.translation = translation
@@ -38,7 +38,7 @@ public enum TranslationResult: Sendable, Equatable {
     /// 1–3 meanings, most common first. `hasMore` is the passive "more…" signal:
     /// the word has further common meanings that were left out.
     case word(meanings: [WordMeaning], hasMore: Bool)
-    /// Just the Russian.
+    /// Just the translation.
     case text(String)
 }
 
@@ -51,7 +51,7 @@ struct TranslationError: Error, CustomStringConvertible {
 /// Today: `ClaudeCLITranslator`. A litellm / Gemini backend can conform later
 /// without touching the CLI or the panel.
 public protocol TextTranslator: Sendable {
-    /// Translate English into Russian. The shape of the result follows
+    /// Translate from the configured source language into the target. The shape of the result follows
     /// `TranslationMode.forInput(text)`.
     ///
     /// - Parameter onStart: called once the work is under way, with a handle that
@@ -71,33 +71,3 @@ public extension TextTranslator {
         try translate(text, onStart: nil)
     }
 }
-
-/// Text mode: the reply is used verbatim, so the prompt has to be strict about
-/// returning nothing else. The user's text is appended after it.
-let textTranslationPrompt = """
-Translate the following English text into Russian. Reply with ONLY the Russian \
-translation — no quotes, no transliteration, no commentary, no alternatives, and \
-no explanation.
-
-Text:
-"""
-
-/// Word mode: asks for minified JSON. Kept in sync with `parseWordResult` and
-/// with the vault note Design/ad-hoc-translator.
-let wordTranslationPrompt = """
-You are helping a Russian-speaking software developer understand an English word \
-or short phrase.
-
-Give up to 3 of its most common meanings, most common first. For each meaning:
-- "translation": the Russian translation
-- "explanation": what this meaning means, in simple English, about 15 words
-- "example": one short, natural English sentence using the word in this meaning
-
-Set "hasMore" to true only if the word has further common meanings you left out.
-
-Reply with ONLY minified JSON in exactly this shape — no markdown fences, no \
-commentary:
-{"meanings":[{"translation":"…","explanation":"…","example":"…"}],"hasMore":false}
-
-Word:
-"""

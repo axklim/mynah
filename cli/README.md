@@ -49,27 +49,60 @@ characters is rejected as a likely misclick (`InputText.characterLimit` in
 `MynahCore`).
 
 ```
-mynah translate <text>     Translate English → Russian
+mynah translate <text>     Translate between the configured language pair (default English → German)
 mynah translate            Read the text from stdin
 ```
 
 ```
 $ mynah translate commit
 commit
-  1. совершать (что-то), делать — to do or carry out an action, especially a crime or mistake
-     "He committed a serious error in the report."
-  2. обязываться, брать на себя обязательство — to promise or dedicate yourself to a course of action or relationship
-     "She committed to finishing the project by Friday."
-  3. коммит (в системе контроля версий) — to save a set of code changes permanently to a version control repository
-     "Don't forget to commit your changes before pushing."
+  1. sich verpflichten — to promise or dedicate yourself firmly to a plan, relationship, or course of action
+     "She decided to commit to the new job offer."
+  2. committen — to save a set of code changes permanently to a version control repository
+     "I need to commit these changes before I switch branches."
+  3. begehen — to carry out a crime or serious wrongdoing
+     "He was accused of committing fraud."
   … more meanings exist
 ```
 
 The final line appears only when the word has further common meanings that were left out.
 
-Direction is English → Russian only; there is no autodetection, so pasting Russian is undefined.
-Three or more words return the translation alone, which is what makes
-`pbpaste | mynah translate | pbcopy` round-trip cleanly.
+Direction is whatever the config file says (default English → German); there is no autodetection,
+so pasting text in the wrong language is undefined. Three or more words return the translation
+alone, which is what makes `pbpaste | mynah translate | pbcopy` round-trip cleanly.
+
+## Configuration
+
+Translation reads `$XDG_CONFIG_HOME/mynah/config.conf`, falling back to
+`~/.config/mynah/config.conf`. The environment variable is honoured only when it is an absolute
+path; relative values fall back to `~/.config/mynah/config.conf` instead. Without a file, the pair is **English → German**.
+
+```
+# Language of the text you paste.
+source = English
+
+# Language you want it in.
+target = German
+
+# Model passed to `claude --model`.
+# model = sonnet
+```
+
+`mynah config` prints the effective settings as a valid config file, so
+`mkdir -p ~/.config/mynah && mynah config > ~/.config/mynah/config.conf` writes a
+starter. Only use it to create the file the first time: the shell truncates the target before
+`mynah` runs, so re-running the same command against an existing config reads it back empty and
+silently overwrites it with defaults. Languages are plain English names — `Brazilian Portuguese`
+works.
+
+The file is parsed strictly: an unknown key, a duplicate key, an empty value, or
+`source` equal to `target` is an error naming the line. `#` starts a comment only
+at the start of a line. `mynah check` does not read this file.
+
+The menu-bar app re-reads it on every hotkey press, so an edit takes effect
+without restarting. One caveat: a Finder- or `launchd`-launched app inherits no
+shell environment, so `$XDG_CONFIG_HOME` is invisible to `Mynah.app` even when
+the CLI in your terminal can see it. They agree whenever it is unset.
 
 ## Dev (without installing)
 
@@ -87,11 +120,13 @@ clipboard empty · book = text over 2000 characters · warning triangle = error.
 JetBrainsMono Nerd Font glyphs; install the font (`brew install --cask font-jetbrains-mono-nerd-font`)
 or the app falls back to emoji: ⚪ ⏳ 🟢 🟡 🔴 📋 📏 ⚠️.
 
-Press **⌃⌥⌘⇧C** (Hyper+⇧C) to translate the clipboard from English into Russian in a floating
-window. One or two words return up to three meanings with simple-English explanations and examples;
-three or more words return just the translation. Esc — or clicking into another app — dismisses the
-window and cancels the call. Because the window is this feature's whole UI, an empty or oversized
-clipboard is reported as a sentence inside it rather than as a menu-bar icon.
+Press **⌃⌥⌘⇧C** (Hyper+⇧C) to translate the clipboard between the configured language pair (default
+English → German) in a floating window, re-reading the config on every press so an edit takes effect
+without restarting. One or two words return up to three meanings with explanations in the source
+language and examples; three or more words return just the translation. Esc — or clicking into
+another app — dismisses the window and cancels the call. Because the window is this feature's whole
+UI, an empty or oversized clipboard — or a broken config file — is reported as a sentence inside it
+rather than as a menu-bar icon.
 
 ```sh
 make app        # build dist/Mynah.app

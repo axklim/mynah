@@ -1,7 +1,7 @@
 public extension TranslationResult {
     /// Render for a terminal.
     ///
-    /// Text mode prints the Russian and nothing else, so the output can be piped
+    /// Text mode prints the translation and nothing else, so the output can be piped
     /// straight into `pbcopy`. Word mode prints the source word as a header, then
     /// numbered meanings with the example quoted underneath.
     ///
@@ -12,8 +12,8 @@ public extension TranslationResult {
     /// a red one.
     func terminalText(source: String) -> String {
         switch self {
-        case .text(let russian):
-            return russian
+        case .text(let translation):
+            return translation
 
         case .word(let meanings, let hasMore):
             var lines = [source]

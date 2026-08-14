@@ -11,10 +11,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         status = StatusItemController()
         coordinator = CheckCoordinator(status: status, evaluator: ClaudeCLIEvaluator())
-        translateCoordinator = TranslateCoordinator(
-            status: status,
-            translator: ClaudeCLITranslator()
-        )
+        translateCoordinator = TranslateCoordinator(status: status) {
+            ClaudeCLITranslator(try MynahConfig.load())
+        }
 
         let menu = NSMenu()
         let checkItem = NSMenuItem(
