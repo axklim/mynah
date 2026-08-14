@@ -40,7 +40,8 @@ and learns from their recurring mistakes to teach better English over time. Full
   - [[0007-traffic-light-evaluator-first]]
   - [[0008-nerd-font-status-icons]]
   - [[0009-rename-to-mynah]]
-  - [[0010-homebrew-formula-cli-only]]
+  - [[0010-homebrew-formula-cli-only]] *(superseded)*
+  - [[0011-homebrew-tap-prebuilt]]
   - [[0012-xdg-config-language-pair]]
 - ❓ [[open-questions]] — unresolved decisions
 - 💡 [[inbox]] — quick idea capture

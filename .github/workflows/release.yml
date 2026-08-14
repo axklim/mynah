@@ -11,10 +11,10 @@ on:
 permissions:
   contents: write
 
-# Why the steps are in this order, and why it cannot be shortened: Homebrew pins a
-# release to a tag's tarball *and* that tarball's checksum, and the checksum cannot be
-# read before the tag exists. So the formula bump is always a commit *after* the tag.
-# That is the manual dance this workflow replaces — see Decision 0010.
+# Why the steps are in this order: the formula installs a *prebuilt* zip, so it must
+# point at an asset that already exists — the release is published first, its checksum
+# read from the file we just uploaded, and only then is the formula in axklim/homebrew-tap
+# bumped. Nothing is compiled by Homebrew. See Decision 0011.
 jobs:
   release:
     runs-on: macos-15
@@ -70,75 +70,83 @@ jobs:
           git push origin main
           git push origin "v$V"
 
-      - name: Point the formula at the new tarball
+      - name: Package the CLI and the app into one zip
+        # Two top-level entries on purpose. Homebrew strips a *single* top-level
+        # directory when unpacking, and a bare .app IS one — zipping the bundle alone
+        # would unpack into its own Contents. With `mynah` beside it nothing is
+        # stripped, so the formula's `bin.install` / `prefix.install` both find their
+        # artifact. -y keeps symlinks as symlinks rather than copying their targets.
         run: |
           set -euo pipefail
           V="${{ inputs.version }}"
-          URL="https://github.com/${{ github.repository }}/archive/refs/tags/v$V.tar.gz"
-          SHA="$(curl -fsSL "$URL" | shasum -a 256 | cut -d' ' -f1)"
-          test -n "$SHA"
-          sed -i '' -e "s|^  url \".*\"|  url \"$URL\"|" \
-                    -e "s|^  sha256 \".*\"|  sha256 \"$SHA\"|" Formula/mynah.rb
-          # Same guard: re-running the workflow for an already-current formula would
-          # otherwise fail here rather than proceeding to verify and publish.
-          if git diff --quiet HEAD; then
-            echo "formula already points at v$V"
-          else
-            git commit -am "Bump the formula to v$V"
-          fi
-          git push origin main
-
-      - name: Package the app bundle
-        # Wrapped in a versioned directory rather than zipping Mynah.app directly:
-        # Homebrew strips a single top-level directory when unpacking, and a bare
-        # .app IS one — a future prebuilt-install formula would unpack into the
-        # bundle's Contents. The wrapper keeps `prefix.install "Mynah.app"` working.
-        run: |
-          set -euo pipefail
-          V="${{ inputs.version }}"
-          mkdir -p "dist/mynah-app-$V"
-          cp -R cli/dist/Mynah.app "dist/mynah-app-$V/"
-          (cd dist && zip -qry "mynah-app-$V.zip" "mynah-app-$V")
-          shasum -a 256 "dist/mynah-app-$V.zip" | tee dist/app-sha256.txt
-
-      - name: Verify a clean install through the tap
-        # The real gate: tap the published repo the way a user would and install from
-        # the tag we just cut. `brew test` asserts `mynah --version` matches the
-        # version Homebrew derived from the URL, so a botched bump fails here.
-        run: |
-          set -euo pipefail
-          brew tap axklim/mynah "https://github.com/${{ github.repository }}"
-          brew trust --formula axklim/mynah/mynah
-          brew install --build-from-source axklim/mynah/mynah
-          brew test mynah
-          brew audit --strict --formula axklim/mynah/mynah
+          mkdir -p dist
+          cp cli/.build/release/mynah dist/mynah
+          cp -R cli/dist/Mynah.app dist/Mynah.app
+          (cd dist && zip -qry "mynah-$V-arm64.zip" mynah Mynah.app)
+          shasum -a 256 "dist/mynah-$V-arm64.zip" | tee dist/zip-sha256.txt
 
       - name: Publish the release
+        # Before the formula bump, not after: the formula points at this asset's URL
+        # and checksum, so the asset has to exist first.
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           V="${{ inputs.version }}"
-          APP_SHA="$(cut -d' ' -f1 dist/app-sha256.txt)"
+          ZIP_SHA="$(cut -d' ' -f1 dist/zip-sha256.txt)"
           cat > notes.md <<EOF
-          ## Install the CLI
+          ## Install
 
           \`\`\`sh
-          brew tap axklim/mynah https://github.com/${{ github.repository }}
-          brew trust --formula axklim/mynah/mynah
-          brew install axklim/mynah/mynah
+          brew install axklim/tap/mynah
           \`\`\`
 
-          Needs an authenticated \`claude\` CLI — there is no API key.
+          Installs both halves — the \`mynah\` CLI and the \`Mynah.app\` menu bar app — from
+          the prebuilt \`mynah-$V-arm64.zip\` below. Apple silicon only. Needs an
+          authenticated \`claude\` CLI; there is no API key.
 
-          ## Menu-bar app
+          Start the menu bar app with \`brew services start mynah\`.
 
-          \`mynah-app-$V.zip\` is the prebuilt, ad-hoc-signed \`Mynah.app\`, attached because
-          building it from source needs full Xcode (a dependency uses \`#Preview\`, whose macro
-          plugin is Xcode-only). Unzip it and move \`Mynah.app\` where you like; macOS will not
-          quarantine it, since it did not arrive via a browser.
-
-          sha256: \`$APP_SHA\`
+          sha256: \`$ZIP_SHA\`
           EOF
-          gh release create "v$V" "dist/mynah-app-$V.zip" \
+          gh release create "v$V" "dist/mynah-$V-arm64.zip" \
             --title "mynah $V" --notes-file notes.md
+
+      - name: Bump the formula in axklim/homebrew-tap
+        # GITHUB_TOKEN cannot reach another repository, so this needs TAP_TOKEN — a
+        # fine-grained PAT with contents:write on axklim/homebrew-tap.
+        env:
+          TAP_TOKEN: ${{ secrets.TAP_TOKEN }}
+        run: |
+          set -euo pipefail
+          V="${{ inputs.version }}"
+          URL="https://github.com/${{ github.repository }}/releases/download/v$V/mynah-$V-arm64.zip"
+          SHA="$(cut -d' ' -f1 dist/zip-sha256.txt)"
+          test -n "$SHA"
+          git clone "https://x-access-token:$TAP_TOKEN@github.com/axklim/homebrew-tap.git" tap
+          cd tap
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          sed -i '' -e "s|^  url \".*\"|  url \"$URL\"|" \
+                    -e "s|^  sha256 \".*\"|  sha256 \"$SHA\"|" \
+                    -e "s|^  version \".*\"|  version \"$V\"|" Formula/mynah.rb
+          # Re-running the workflow for an already-current formula would otherwise fail
+          # here rather than proceeding to the verification below.
+          if git diff --quiet HEAD; then
+            echo "formula already points at v$V"
+          else
+            git commit -am "fix(mynah): bump to $V"
+            git push origin HEAD:main
+          fi
+
+      - name: Verify a clean install through the tap
+        # The real gate: tap and install exactly what a user gets — the published asset,
+        # through the formula we just pushed. `brew test` asserts `mynah --version`
+        # equals the formula's version, so a botched bump fails here.
+        run: |
+          set -euo pipefail
+          brew tap axklim/tap
+          brew trust --formula axklim/tap/mynah
+          brew install axklim/tap/mynah
+          brew test mynah
+          brew audit --strict --formula axklim/tap/mynah

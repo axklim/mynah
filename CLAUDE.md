@@ -35,7 +35,7 @@ paste into ChatGPT with a fixed prompt → copy the result back. This app takes 
 | Invocation      | Menu bar app + global hotkey → popup; larger window for the dashboard    |
 | Language / UI   | Swift 6 / SwiftUI + AppKit                                               |
 | Build toolchain | `swift` CLT + `make`, no Xcode project (`make app` bundles the GUI). AppKit/SwiftUI come with the CLT SDK, but **`mynah-bar` still needs full Xcode** — a dependency uses `#Preview`, whose macro plugin is Xcode-only (Decision 0003's correction · Finding `preview-macro-needs-xcode`). The `mynah` CLI is CLT-only. |
-| Distribution    | Homebrew, repo-as-tap: `Formula/mynah.rb` lives here and builds the **CLI** from source (Decision 0010 has the install and release steps). App distribution is unsolved. |
+| Distribution    | Homebrew via `axklim/homebrew-tap`, which installs **prebuilt** CLI + app from one release asset — nothing is compiled by brew (Decision 0011; Decision 0010 is the superseded repo-as-tap, CLI-only version) |
 | Secrets         | Keychain (future GUI). The CLI evaluator needs no API key — it shells out to an authed `claude -p` (Decision 0006) |
 | Storage         | Local, on-device (message text is sensitive — see Privacy in vault)      |
 | Config          | XDG file at `$XDG_CONFIG_HOME/mynah/config.conf` (fallback `~/.config/mynah/config.conf`); `key = value`, hand-parsed, no dependency (Decision 0012) |
@@ -50,17 +50,17 @@ and may contain hyphens; module names are CamelCase and can't — see `cli/Packa
 
 CLI targets:
 
-- `brew tap axklim/mynah https://github.com/axklim/mynah` + `brew trust --formula
-  axklim/mynah/mynah` + `brew install axklim/mynah/mynah` — the installed path for the CLI. The
-  repo is its own tap, so there is no auto-tap and the URL form is required (Decision 0010)
+- `brew install axklim/tap/mynah` — the installed path, and it ships **both** products prebuilt
+  (`bin/mynah` + `Mynah.app`, started with `brew services start mynah`). The formula lives in
+  `axklim/homebrew-tap`, not here; the release workflow bumps it cross-repo (Decision 0011)
 - `make install` — build release + install `mynah` to `~/.local/bin` (override `PREFIX=…`).
-  Pass `SWIFT_FLAGS=…` to add `swift build` flags; the formula uses it for `--disable-sandbox`,
-  since a Homebrew build can't nest SwiftPM's own sandbox.
+  Pass `SWIFT_FLAGS=…` to add `swift build` flags. (Nothing needs it today; the formula stopped
+  building from source in Decision 0011.)
 - `make build` / `make uninstall` / `make clean`; bare `make` prints the target list
 - `make version` — print the version. It has **one** home,
   `cli/Sources/MynahCore/MynahVersion.swift`: `mynah --version` reads it, and `make app`
   generates `Info.plist` from `Info.plist.in` with it substituted in, so a bump is that one
-  line (release steps in Decision 0010)
+  line (release steps in Decision 0011)
 - Dev without installing: `cd cli && swift run mynah check "some text"`
 - Run it: `mynah check "<text>"` (or `pbpaste | mynah check`) → one verdict 🔴/🟡/🟢
 - Translate it: `mynah translate "<text>"` (or `pbpaste | mynah translate`) — between the

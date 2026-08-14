@@ -1,6 +1,11 @@
 # 0010 — Homebrew ships the CLI as a from-source formula; the app waits
 
-- **Status:** accepted (the app half is still open — see Open question below)
+> **Superseded by [[0011-homebrew-tap-prebuilt]] (2026-08-14).** The tap moved to
+> `axklim/homebrew-tap` and the formula now installs both products prebuilt. What survives is the
+> measurement in the 2026-08-11 update below — formula downloads are not quarantined — which is
+> what made shipping the app possible.
+
+- **Status:** superseded by [[0011-homebrew-tap-prebuilt]]
 - **Date:** 2026-08-11
 - **Relates to:** [[0003-build-toolchain-xcode-later]] · [[0008-nerd-font-status-icons]] ·
   [[preview-macro-needs-xcode]] · [[Roadmap|Phase 2.2]]

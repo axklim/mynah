@@ -21,29 +21,28 @@ just the translation for anything longer. See [`cli/`](cli/README.md#configurati
 change the pair.
 
 ```sh
-brew tap axklim/mynah https://github.com/axklim/mynah
-brew trust --formula axklim/mynah/mynah
-brew install axklim/mynah/mynah
+brew install axklim/tap/mynah
 
 mynah check "i has finished the task and it works good"
 ```
 
-The formula builds from source and installs the **CLI only**. Or build it yourself:
+That installs **both halves** — the CLI and the menu-bar app — prebuilt, Apple silicon only.
+Start the app with `brew services start mynah`, then press **⌃⌥⌘C** (Hyper+C) to rate whatever's
+on the clipboard; the tray icon shows the verdict for a few seconds. A second hotkey
+(**⌃⌥⌘⇧C**) translates the clipboard between the configured pair (default **English → German**)
+into a floating window, for understanding what someone wrote to you. See [`cli/`](cli/README.md).
+
+Or build it yourself:
 
 ```sh
 make install      # builds + installs `mynah` to ~/.local/bin
+make run-app      # builds + opens the menu-bar app
 ```
 
-Or run it as a menu-bar app — `make run-app`, then press **⌃⌥⌘C** (Hyper+C) to rate whatever's on the
-clipboard; the tray icon shows the verdict for a few seconds. See [`cli/`](cli/README.md).
-
-A second hotkey (**⌃⌥⌘⇧C**) translates the clipboard between the configured pair (default
-**English → German**) into a floating window, for understanding what someone wrote to you.
-
 Needs an authenticated `claude` CLI — no API key. The CLI builds with the Swift Command Line
-Tools; the menu-bar app currently needs full Xcode, because a dependency uses `#Preview`
-(`mynah-vault/Findings/preview-macro-needs-xcode.md`), which is also why `brew install` ships
-the CLI only.
+Tools; the menu-bar app needs full Xcode, because a dependency uses `#Preview`
+(`mynah-vault/Findings/preview-macro-needs-xcode.md`) — which is why Homebrew ships prebuilt
+artifacts instead of building from source (`mynah-vault/Decisions/0011-homebrew-tap-prebuilt.md`).
 
 ## Where the knowledge lives
 
