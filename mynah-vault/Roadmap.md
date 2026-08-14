@@ -50,9 +50,10 @@ that delivered them.
   only place the bundle can be built. What made this possible for the app half was a personal-fleet
   constraint (a few Apple-silicon Macs, all mine), so the formula is `arm64`-only and unsigned
   beyond ad-hoc.
-  **Remaining:** create the `TAP_TOKEN` secret, land the formula in the tap, and cut **v0.3.0** —
-  the tap's formula carries placeholder `url`/`sha256` until then. The font question from
-  [[0008-nerd-font-status-icons]] rides along with the app and is still open.
+  The `TAP_TOKEN` secret exists and the formula is merged in the tap (2026-08-14).
+  **Remaining:** cut **v0.3.0** — the tap's formula carries placeholder `url`/`sha256` until that
+  run rewrites them. The font question from [[0008-nerd-font-status-icons]] rides along with the
+  app and is still open.
 
 - [x] **Phase 2.3 — Ad-hoc translator (En → Ru)** *(design: [[ad-hoc-translator]])*
   A second hotkey that translates the clipboard **English → Russian** into a floating window —

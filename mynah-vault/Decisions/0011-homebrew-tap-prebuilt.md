@@ -84,6 +84,15 @@ mistake nothing else catches: a tag cut without step 2.
   `tccutil reset SystemPolicyDownloadsFolder io.klimov.mynah` is in the caveats. `aerotab` learned
   the same lesson the hard way.
 
+## Interaction with the config file ([[0012-xdg-config-language-pair]])
+
+`brew services start mynah` launches the bundle through **launchd**, which is exactly the case
+[[xdg-config-invisible-to-the-app]] describes: no shell environment, so no `$XDG_CONFIG_HOME`. The
+installed app therefore resolves the fallback, `~/.config/mynah/config.conf`, while the installed
+CLI follows the variable when one is set. On this fleet both paths name the same file, so nothing
+diverges today — but `~/.config/mynah/config.conf` is the path to quote to anyone installing via
+brew, since it is the one that holds under launchd.
+
 ## Migration
 
 Per machine, once:
