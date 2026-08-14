@@ -10,7 +10,7 @@ import MynahCore
 public enum TranslationViewState: Sendable, Equatable {
     /// The 文A glyph and "Translating…", while the call is in flight.
     case loading
-    /// Prose mode: the Russian alone. The English was copied a second ago;
+    /// Prose mode: the translation alone. The English was copied a second ago;
     /// reprinting it is noise.
     case text(String)
     /// Word mode: the source as a header, then up to three meanings.
@@ -21,8 +21,8 @@ public enum TranslationViewState: Sendable, Equatable {
     /// Map a finished translation onto the view.
     public static func from(_ result: TranslationResult, source: String) -> TranslationViewState {
         switch result {
-        case .text(let russian):
-            return .text(russian)
+        case .text(let translation):
+            return .text(translation)
         case .word(let meanings, let hasMore):
             return .word(source: source, meanings: meanings, hasMore: hasMore)
         }
@@ -51,5 +51,12 @@ public enum TranslationViewState: Sendable, Equatable {
     /// with no reason is the least useful thing an error can say.
     public static func failure(_ error: Error) -> TranslationViewState {
         .failed("Couldn't reach claude. \(error)")
+    }
+
+    /// Map a config problem onto the view. Deliberately separate from
+    /// `failure(_:)`: "Couldn't reach claude" would be a lie, and the fix is in a
+    /// file whose path therefore has to be on screen.
+    public static func configFailure(_ error: Error) -> TranslationViewState {
+        .failed("Your mynah config has a problem — \(error)")
     }
 }

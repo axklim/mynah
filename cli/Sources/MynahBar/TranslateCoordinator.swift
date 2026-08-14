@@ -12,7 +12,11 @@ import MynahUI
 @MainActor
 final class TranslateCoordinator {
     private let status: StatusItemController
-    private let translator: any TextTranslator
+    /// Built fresh for every run rather than stored, so the config file is re-read
+    /// on each press: edit it, press the hotkey, done — no restart, no "Reload
+    /// config" menu item. A throwing closure also gives a broken config somewhere
+    /// to land (the panel) instead of crashing the app at launch.
+    private let makeTranslator: () throws -> any TextTranslator
     private let panel: TranslationPanel
 
     private var isTranslating = false
@@ -23,9 +27,9 @@ final class TranslateCoordinator {
     /// panel the user has already dismissed and reopened.
     private var generation = 0
 
-    init(status: StatusItemController, translator: any TextTranslator) {
+    init(status: StatusItemController, makeTranslator: @escaping () throws -> any TextTranslator) {
         self.status = status
-        self.translator = translator
+        self.makeTranslator = makeTranslator
         var dismissed: (() -> Void)?
         self.panel = TranslationPanel { dismissed?() }
         dismissed = { [weak self] in self?.handleDismissal() }
@@ -49,13 +53,23 @@ final class TranslateCoordinator {
             return
         }
 
+        // After the input guard, not before: an empty clipboard is the common
+        // mistake and deserves the plainer message. (The CLI loads first only
+        // because its input can block on stdin.)
+        let translator: any TextTranslator
+        do {
+            translator = try makeTranslator()
+        } catch {
+            panel.show(TranslationViewState.configFailure(error))
+            return
+        }
+
         generation += 1
         let run = generation
         isTranslating = true
         status.show(.translating)
         panel.show(.loading)
 
-        let translator = self.translator
         Task {
             let state = await Self.translate(translator, source) { [weak self] handle in
                 Task { @MainActor in self?.adopt(handle, for: run) }

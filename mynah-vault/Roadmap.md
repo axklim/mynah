@@ -71,6 +71,13 @@ that delivered them.
   *Was built **ahead of** the distribution track above (branch `ad-hoc-translator`, 2026-08-04);
   numbered after it to keep the phase numbers in order.*
 
+- [x] **Phase 2.4 — Configurable language pair** *(design: [[configurable-language-pair]])*
+  The translator's direction becomes a setting in an XDG config file
+  (`~/.config/mynah/config.conf`), and the default changes from English → Russian to
+  **English → German**. One active pair, both sides configurable; word-mode explanations
+  follow the source language. Adds `mynah config` and the project's first config file
+  ([[0012-xdg-config-language-pair]]). `mynah check` stays English-only.
+
 > **Next up.** The distribution track has taken the CLI as far as it goes without the personal
 > account (see Phase 2.2's two remaining steps). Either close out app distribution — pick a route
 > from [[0010-homebrew-formula-cli-only]] — or move to [[Roadmap|Phase 3]]'s polish loop, which can

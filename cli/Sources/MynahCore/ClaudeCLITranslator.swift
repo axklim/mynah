@@ -1,18 +1,30 @@
 import Foundation
 
-/// Translates English → Russian by asking Claude through `ClaudeCLI`.
+/// Translates between the configured language pair by asking Claude through
+/// `ClaudeCLI`.
 public struct ClaudeCLITranslator: TextTranslator {
-    /// Model alias passed to `claude --model`. Sonnet for both modes, matching the
-    /// evaluator: Haiku under-performed on nuance in this project. Exposed so
-    /// trying Haiku for text mode later is a one-line experiment.
+    /// Which way round to translate. No default: every call site must say which
+    /// pair it means, so a forgotten config read is a compile error rather than a
+    /// silent translation into the wrong language.
+    public var languages: LanguagePair
+
+    /// Model alias passed to `claude --model`. Sonnet by default, matching the
+    /// evaluator: Haiku under-performed on nuance in this project. Configurable,
+    /// so trying Haiku for text mode is a config edit.
     public var model: String
 
     /// Word mode never shows more than this many meanings; the rest are reported
     /// by `hasMore`.
     static let maxMeanings = 3
 
-    public init(model: String = "sonnet") {
+    public init(languages: LanguagePair, model: String) {
+        self.languages = languages
         self.model = model
+    }
+
+    /// The everyday initialiser: `ClaudeCLITranslator(try MynahConfig.load())`.
+    public init(_ config: MynahConfig) {
+        self.init(languages: config.languages, model: config.model)
     }
 
     public func translate(
@@ -30,7 +42,7 @@ public struct ClaudeCLITranslator: TextTranslator {
         switch TranslationMode.forInput(text) {
         case .text:
             let reply = try ClaudeCLI.run(
-                prompt: textTranslationPrompt + "\n\n" + text,
+                prompt: TranslationPrompts.text(languages) + "\n\n" + text,
                 model: model,
                 onStart: hook
             )
@@ -42,7 +54,7 @@ public struct ClaudeCLITranslator: TextTranslator {
 
         case .word:
             let reply = try ClaudeCLI.run(
-                prompt: wordTranslationPrompt + "\n\n" + text,
+                prompt: TranslationPrompts.word(languages) + "\n\n" + text,
                 model: model,
                 onStart: hook
             )

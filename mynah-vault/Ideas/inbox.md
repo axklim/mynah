@@ -27,9 +27,15 @@ Quick capture. Drop half-formed ideas here without ceremony; promote the good on
 - **Try Haiku for the translator's text mode** — both modes default to Sonnet, matching the
   evaluator ([[haiku-misses-ambiguity]]). Plain text translation is an easier task than the word
   mode's explanations, and speed matters for a window you're staring at. One-line experiment once
-  the prompts settle ([[ad-hoc-translator]]).
+  the prompts settle ([[ad-hoc-translator]]). **Now a `model = haiku` config edit** rather than a
+  code change, since [[configurable-language-pair]] added `model` to the config file — still worth
+  actually trying, just cheaper to try now.
 - **Ru → En autodetection** — the translator is En → Ru only by decision; pasting Russian is
-  undefined. Add direction detection if it starts to itch ([[ad-hoc-translator]]).
+  undefined. Add direction detection if it starts to itch ([[ad-hoc-translator]]). **The direction
+  itself is now configurable** ([[configurable-language-pair]]; default is En → De, and Ru → En is
+  a config edit away), so what's left of this idea is genuinely *auto*detecting the source
+  language, not making the direction changeable — those were bundled together before and are two
+  different asks now.
 - **Defer opening the translation window until the result is ready** — requested 2026-08-05 after
   the manual verification pass of [[ad-hoc-translator|Phase 2.3]]. Today `runTranslate` opens the
   panel in `.loading` immediately; the ask is for the 文A glyph in the menu bar to be the only

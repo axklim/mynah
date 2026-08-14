@@ -38,6 +38,7 @@ paste into ChatGPT with a fixed prompt → copy the result back. This app takes 
 | Distribution    | Homebrew, repo-as-tap: `Formula/mynah.rb` lives here and builds the **CLI** from source (Decision 0010 has the install and release steps). App distribution is unsolved. |
 | Secrets         | Keychain (future GUI). The CLI evaluator needs no API key — it shells out to an authed `claude -p` (Decision 0006) |
 | Storage         | Local, on-device (message text is sensitive — see Privacy in vault)      |
+| Config          | XDG file at `$XDG_CONFIG_HOME/mynah/config.conf` (fallback `~/.config/mynah/config.conf`); `key = value`, hand-parsed, no dependency (Decision 0012) |
 
 ## Building & running
 
@@ -62,9 +63,16 @@ CLI targets:
   line (release steps in Decision 0010)
 - Dev without installing: `cd cli && swift run mynah check "some text"`
 - Run it: `mynah check "<text>"` (or `pbpaste | mynah check`) → one verdict 🔴/🟡/🟢
-- Translate it: `mynah translate "<text>"` (or `pbpaste | mynah translate`) —
-  **English → Russian only**, no autodetection. One or two words return up to three meanings, each
-  with a simple-English explanation and an example; three or more words return just the translation.
+- Translate it: `mynah translate "<text>"` (or `pbpaste | mynah translate`) — between the
+  **configured language pair**, defaulting to **English → German**. Change it by editing the config
+  file (`mynah config` shows where it lives); no autodetection either way. One or two words return
+  up to three meanings, each with a simple-English explanation and an example; three or more words
+  return just the translation.
+- `mynah config` — print the effective config and where it lives.
+  `mkdir -p ~/.config/mynah && mynah config > ~/.config/mynah/config.conf` writes a starter file.
+  Only use it to create the file the first time: the shell truncates the target before `mynah`
+  runs, so re-running the same command against an existing config reads it back empty and
+  silently overwrites it with defaults.
 
 **Menu-bar app (Phase 2).** `mynah-bar` is an `LSUIElement` accessory app (no Dock icon):
 the global hotkey **⌃⌥⌘C** (Hyper+C) (via the `KeyboardShortcuts` package) evaluates the clipboard text and
@@ -72,10 +80,12 @@ shows the verdict in the status-item icon for ~4s, then reverts: a green / yello
 outlined page when the clipboard has no text, a book when the text is over 2000 characters, or a
 warning triangle on failure.
 
-**⌃⌥⌘⇧C** (Hyper+⇧C) translates the clipboard **English → Russian** into a floating window —
-one or two words return up to three meanings with simple-English explanations, longer text returns
-just the translation. Esc or clicking away dismisses it and cancels the call. The window is the UI
-for this feature, so input problems appear as sentences in it rather than as icon states.
+**⌃⌥⌘⇧C** (Hyper+⇧C) translates the clipboard between the **configured language pair** (default
+**English → German**) into a floating window, re-reading the config file on every press so an edit
+takes effect without restarting — one or two words return up to three meanings with explanations in
+the source language, longer text returns just the translation. Esc or clicking away dismisses it and
+cancels the call. The window is the UI for this feature, so input problems (including a broken
+config file) appear as sentences in it rather than as icon states.
 
 The glyphs are JetBrainsMono Nerd Font codepoints tinted via
 `IconTint`; without that font installed the app falls back to emoji.

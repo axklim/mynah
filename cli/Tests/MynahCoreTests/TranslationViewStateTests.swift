@@ -50,4 +50,21 @@ final class TranslationViewStateTests: XCTestCase {
         XCTAssertTrue(message.hasPrefix("Couldn't reach claude."), "wrong lead: \(message)")
         XCTAssertTrue(message.contains("socket closed"), "detail dropped: \(message)")
     }
+
+    func testConfigFailureNamesTheFileAndTheProblem() {
+        let error = ConfigError(
+            path: "/Users/someone/.config/mynah/config.conf",
+            line: 4,
+            reason: "unknown key \"targt\""
+        )
+        guard case .failed(let message) = TranslationViewState.configFailure(error) else {
+            return XCTFail("expected .failed")
+        }
+        // The user has to go and edit the file, so the path has to be in the window.
+        XCTAssertTrue(message.contains("config.conf"), message)
+        XCTAssertTrue(message.contains("line 4"), message)
+        XCTAssertTrue(message.contains("targt"), message)
+        // Not the claude-failure wording: that would be a lie.
+        XCTAssertFalse(message.contains("Couldn't reach claude"), message)
+    }
 }
