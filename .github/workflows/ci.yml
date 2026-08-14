@@ -51,18 +51,6 @@ jobs:
           test "$binary" = "$expected"
           test "$bundle" = "$expected"
 
-  formula:
-    runs-on: macos-15
-    steps:
-      - uses: actions/checkout@v7
-
-      # Tapping this repo by URL is how users install it, so audit it the same way
-      # rather than linting the file in isolation.
-      - name: Tap this checkout and audit the formula
-        run: |
-          set -euo pipefail
-          brew tap axklim/mynah "file://$PWD"
-          # Homebrew 6 refuses formulae from untrusted third-party taps, and trust is
-          # keyed to the tap URL — so CI has to trust it exactly like a user does.
-          brew trust --formula axklim/mynah/mynah
-          brew audit --strict --formula axklim/mynah/mynah
+  # There is no formula job any more: the formula moved to axklim/homebrew-tap
+  # (Decision 0011), and the release workflow audits it there against the asset it
+  # just published — which is stronger than linting a copy that never gets installed.

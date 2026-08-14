@@ -38,25 +38,22 @@ that delivered them.
   Public at **github.com/axklim/mynah**, `main` pushed. Prerequisite for the Homebrew tap in
   [[Roadmap|Phase 2.2]].
 
-- [~] **Phase 2.2 — Distribute via Homebrew** *(CLI done; app deferred —
-  [[0010-homebrew-formula-cli-only]] · [[2026-08-11-session-08-homebrew-distribution]])*
-  **The `mynah` CLI is installable**: `brew install axklim/mynah/mynah` builds it from source via the
-  project's `make install`, verified end-to-end (installed, `brew test`, clean `brew audit --strict`,
-  and a real 🟡 verdict from the installed binary). `Formula/mynah.rb` lives in this repo — the repo
-  is its own tap, matching `axklim/mbright`; see [[0010-homebrew-formula-cli-only]] for the install
-  and release steps.
-  **The menu-bar app is not shipped**, and the reason is a finding, not a shortcut:
-  [[preview-macro-needs-xcode]] — `KeyboardShortcuts` uses `#Preview`, whose macro plugin ships only
-  inside Xcode, so building the app from source would demand ~10 GB of Xcode from every user; and a
-  cask can't take its place while the bundle is only ad-hoc signed, because Homebrew quarantines cask
-  downloads. [[0010-homebrew-formula-cli-only]] records three candidate routes for the app, the most
-  promising being a **formula that installs a prebuilt bundle** (formula downloads aren't
-  quarantined). The font question from [[0008-nerd-font-status-icons]] rides along with the app and is
-  therefore still open; it does not apply to the CLI, which prints emoji.
-  `v0.1.0` is tagged and the formula's `sha256` is filled in. `--version` landed afterwards, so the
-  formula still pins `v0.1.0` and its version assertion fails until **`v0.2.0` is tagged** and the
-  formula's `url`/`sha256` follow — the checksum cannot be read before the tag exists. Steps in
-  [[0010-homebrew-formula-cli-only]].
+- [~] **Phase 2.2 — Distribute via Homebrew** *(both products ship; awaiting the first release —
+  [[0011-homebrew-tap-prebuilt]] · [[0010-homebrew-formula-cli-only]] ·
+  [[2026-08-11-session-08-homebrew-distribution]])*
+  `brew install axklim/tap/mynah` installs **both** the CLI and `Mynah.app`, prebuilt, out of one
+  release asset — nothing is compiled by Homebrew. The formula moved to `axklim/homebrew-tap`, so
+  the two-argument `brew tap` and the separate `brew trust` step are gone; the release workflow
+  bumps it cross-repo with a `TAP_TOKEN` PAT. Dry-run verified on 2026-08-14 (install, `brew test`,
+  clean `brew audit --strict`, no quarantine attribute) — see [[0011-homebrew-tap-prebuilt]].
+  [[preview-macro-needs-xcode]] no longer blocks the app: it just means CI, which has Xcode, is the
+  only place the bundle can be built. What made this possible for the app half was a personal-fleet
+  constraint (a few Apple-silicon Macs, all mine), so the formula is `arm64`-only and unsigned
+  beyond ad-hoc.
+  The `TAP_TOKEN` secret exists and the formula is merged in the tap (2026-08-14).
+  **Remaining:** cut **v0.3.0** — the tap's formula carries placeholder `url`/`sha256` until that
+  run rewrites them. The font question from [[0008-nerd-font-status-icons]] rides along with the
+  app and is still open.
 
 - [x] **Phase 2.3 — Ad-hoc translator (En → Ru)** *(design: [[ad-hoc-translator]])*
   A second hotkey that translates the clipboard **English → Russian** into a floating window —
@@ -78,9 +75,9 @@ that delivered them.
   follow the source language. Adds `mynah config` and the project's first config file
   ([[0012-xdg-config-language-pair]]). `mynah check` stays English-only.
 
-> **Next up.** The distribution track has taken the CLI as far as it goes without the personal
-> account (see Phase 2.2's two remaining steps). Either close out app distribution — pick a route
-> from [[0010-homebrew-formula-cli-only]] — or move to [[Roadmap|Phase 3]]'s polish loop, which can
+> **Next up.** Distribution is designed and dry-run verified; it needs the personal account to
+> finish (see Phase 2.2's remaining steps: the `TAP_TOKEN` secret, the tap commit, and the v0.3.0
+> release). Then move to [[Roadmap|Phase 3]]'s polish loop, which can
 > reuse `TranslationPanel` rather than building a second window. Three translator follow-ups are
 > still open in [[inbox]], one of which (`⌘C` doesn't copy) is shipped behaviour.
 
