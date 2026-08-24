@@ -1,28 +1,26 @@
 import AppKit
+import Carbon.HIToolbox
 import SwiftUI
 import MynahUI
+import MynahCore
 
-/// The floating translation window.
-///
-/// Dismissal is covered from two angles because it is two different events: Esc
-/// arrives as `cancelOperation(_:)` and needs the panel to be key, which is why
-/// `show` calls `NSApp.activate`. Focus loss is handled by the `resignKey()`
-/// override — and since the app deactivating also resigns the panel's key status,
-/// that path likely fires `resignKey()` too; `hidesOnDeactivate` is a backstop on
-/// top of it, not a separate, non-overlapping mechanism.
 @MainActor
 final class TranslationPanel {
     private let onDismiss: () -> Void
+    private let focusGraceSeconds: () -> Int
     private var panel: KeyPanel?
+    private var graceTimer: Timer?
+    private var globalEscapeMonitor: Any?
 
-    init(onDismiss: @escaping () -> Void) {
+    init(onDismiss: @escaping () -> Void, focusGraceSeconds: @escaping () -> Int) {
         self.onDismiss = onDismiss
+        self.focusGraceSeconds = focusGraceSeconds
+        globalEscapeMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            guard event.keyCode == kVK_Escape else { return }
+            Task { @MainActor in self?.handleGlobalEscape() }
+        }
     }
 
-    /// Show the panel, creating it if needed, and make it key so Esc arrives.
-    ///
-    /// Reuses an open panel rather than stacking a second one: pressing the hotkey
-    /// while a result is on screen replaces the contents.
     func show(_ state: TranslationViewState) {
         let panel = panel ?? makePanel()
         self.panel = panel
@@ -31,21 +29,11 @@ final class TranslationPanel {
         panel.makeKeyAndOrderFront(nil)
     }
 
-    /// Swap the content of an already-visible panel. Does nothing if it is closed,
-    /// so a late reply cannot resurrect a dismissed window.
     func update(_ state: TranslationViewState) {
         guard let panel, panel.isVisible else { return }
         render(state, into: panel)
     }
 
-    /// Host the state and size the window to what it actually needs.
-    ///
-    /// **Why the explicit sizing.** A `ScrollView` does not shrink to its content the
-    /// way a `VStack` does, so without this the panel would open at its full
-    /// `maxHeight` for every state — a one-line Russian sentence in a 420×520 window
-    /// with most of it empty. The panel therefore asks the hosting view what it wants
-    /// (`fittingSize`) and clamps the answer: never taller than `maxHeight`, and never
-    /// so short that the loading row has nowhere to sit.
     private func render(_ state: TranslationViewState, into panel: KeyPanel) {
         let host = NSHostingView(rootView: TranslationView(state: state))
         panel.contentView = host
@@ -55,13 +43,10 @@ final class TranslationPanel {
         position(panel)
     }
 
-    /// Enough for the loading row plus padding, so a short state still reads as a
-    /// window rather than a sliver.
     private static let minContentHeight: CGFloat = 72
 
     private func makePanel() -> KeyPanel {
         let panel = KeyPanel(
-            // Initial size only; `render` resizes to the content before it is shown.
             contentRect: NSRect(
                 x: 0, y: 0,
                 width: TranslationPanelMetrics.width,
@@ -75,16 +60,16 @@ final class TranslationPanel {
         panel.titlebarAppearsTransparent = true
         panel.isFloatingPanel = true
         panel.level = .floating
-        panel.hidesOnDeactivate = true
+        // resignKey() already covers app deactivation; leaving this on would
+        // hide the panel before the grace timer gets a chance.
+        panel.hidesOnDeactivate = false
         panel.isReleasedWhenClosed = false
-        panel.onCancelOrResignKey = { [weak self] in self?.handleDismissal() }
+        panel.onExplicitClose = { [weak self] in self?.handleDismissal() }
+        panel.onResignKey = { [weak self] in self?.startGraceTimer() }
+        panel.onBecomeKey = { [weak self] in self?.cancelGraceTimer() }
         return panel
     }
 
-    /// Guards against re-entry: `close()` on a key panel resigns key synchronously,
-    /// which calls straight back into this method. Without the guard one Esc press
-    /// would fire `onDismiss` twice, and the coordinator's contract is one dismissal
-    /// to one reset.
     private var isDismissing = false
 
     private func handleDismissal() {
@@ -92,15 +77,37 @@ final class TranslationPanel {
         isDismissing = true
         defer { isDismissing = false }
 
+        cancelGraceTimer()
         panel?.close()
-        // Hand focus back to whatever the developer was reading.
         NSApp.hide(nil)
         onDismiss()
     }
 
-    /// Horizontally centred on the active screen, in the upper third —
-    /// Spotlight-like and predictable, rather than chasing a mouse that had nothing
-    /// to do with pressing a keyboard shortcut.
+    private func startGraceTimer() {
+        guard !isDismissing else { return }
+        cancelGraceTimer()
+        let seconds = focusGraceSeconds()
+        guard seconds > 0 else {
+            handleDismissal()
+            return
+        }
+        graceTimer = Timer.scheduledTimer(withTimeInterval: TimeInterval(seconds), repeats: false) { [weak self] _ in
+            MainActor.assumeIsolated {
+                self?.handleDismissal()
+            }
+        }
+    }
+
+    private func cancelGraceTimer() {
+        graceTimer?.invalidate()
+        graceTimer = nil
+    }
+
+    private func handleGlobalEscape() {
+        guard let panel, panel.isVisible else { return }
+        handleDismissal()
+    }
+
     private func position(_ panel: NSPanel) {
         let size = panel.frame.size
         guard let screen = NSScreen.main else { return }
@@ -111,18 +118,28 @@ final class TranslationPanel {
     }
 }
 
-/// An `NSPanel` that reports Esc and loss of key status to its owner.
 @MainActor
 final class KeyPanel: NSPanel {
-    var onCancelOrResignKey: (() -> Void)?
+    var onExplicitClose: (() -> Void)?
+    var onResignKey: (() -> Void)?
+    var onBecomeKey: (() -> Void)?
 
-    /// Esc arrives here rather than as a keyDown, provided the panel is key.
     override func cancelOperation(_ sender: Any?) {
-        onCancelOrResignKey?()
+        onExplicitClose?()
+    }
+
+    override func close() {
+        onExplicitClose?()
+        super.close()
     }
 
     override func resignKey() {
         super.resignKey()
-        onCancelOrResignKey?()
+        onResignKey?()
+    }
+
+    override func becomeKey() {
+        super.becomeKey()
+        onBecomeKey?()
     }
 }

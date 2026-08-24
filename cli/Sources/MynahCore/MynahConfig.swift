@@ -28,21 +28,28 @@ public struct MynahConfig: Sendable, Equatable {
     /// Deliberately not validated against a list of aliases: model names change,
     /// and a stale allowlist rejects a model that works.
     public let model: String
+    /// How long the translation panel waits after losing focus before it closes
+    /// itself. `0` reproduces the original instant-close behaviour.
+    public let translationFocusGraceSeconds: Int
 
-    public init(languages: LanguagePair, model: String) {
+    public init(languages: LanguagePair, model: String, translationFocusGraceSeconds: Int = 60) {
         self.languages = languages
         self.model = model
+        self.translationFocusGraceSeconds = translationFocusGraceSeconds
     }
 
     public static let `default` = MynahConfig(
         languages: LanguagePair(source: "English", target: "German"),
-        model: "sonnet"
+        model: "sonnet",
+        translationFocusGraceSeconds: 60
     )
 
     /// Longer than this is not a language name, it is a stray paste.
     static let maxLanguageNameLength = 40
 
-    private static let knownKeys: Set<String> = ["source", "target", "model"]
+    private static let knownKeys: Set<String> = [
+        "source", "target", "model", "translationfocusgraceseconds"
+    ]
 
     /// Parse `key = value` lines. Pure — the `path` is only ever used to build
     /// error messages, so the parser is testable without a filesystem.
@@ -125,9 +132,25 @@ public struct MynahConfig: Sendable, Equatable {
             )
         }
 
+        let translationFocusGraceSeconds: Int
+        if let raw = values["translationfocusgraceseconds"] {
+            guard let parsed = Int(raw), parsed >= 0 else {
+                throw ConfigError(
+                    path: path,
+                    line: lineOf["translationfocusgraceseconds"],
+                    reason: "translationfocusgraceseconds must be a non-negative whole number of "
+                        + "seconds, found \(raw.debugDescription)"
+                )
+            }
+            translationFocusGraceSeconds = parsed
+        } else {
+            translationFocusGraceSeconds = Self.default.translationFocusGraceSeconds
+        }
+
         return MynahConfig(
             languages: LanguagePair(source: source, target: target),
-            model: values["model"] ?? Self.default.model
+            model: values["model"] ?? Self.default.model,
+            translationFocusGraceSeconds: translationFocusGraceSeconds
         )
     }
 

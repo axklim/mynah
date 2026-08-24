@@ -144,7 +144,8 @@ final class MynahConfigFileTests: XCTestCase {
         // parses back to exactly the same settings.
         let config = MynahConfig(
             languages: LanguagePair(source: "German", target: "Brazilian Portuguese"),
-            model: "haiku"
+            model: "haiku",
+            translationFocusGraceSeconds: 5
         )
         let text = config.configFileText(path: "/tmp/config.conf")
         XCTAssertEqual(try MynahConfig.parse(text, path: "/tmp/config.conf"), config)
