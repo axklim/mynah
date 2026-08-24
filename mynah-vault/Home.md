@@ -43,6 +43,7 @@ and learns from their recurring mistakes to teach better English over time. Full
   - [[0010-homebrew-formula-cli-only]] *(superseded)*
   - [[0011-homebrew-tap-prebuilt]]
   - [[0012-xdg-config-language-pair]]
+  - [[0013-version-lives-in-the-git-tag]]
 - ❓ [[open-questions]] — unresolved decisions
 - 💡 [[inbox]] — quick idea capture
 - 🔎 [[toolchain-notes]] — environment findings

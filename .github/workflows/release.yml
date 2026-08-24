@@ -5,19 +5,35 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Version to release, without the leading v (e.g. 0.2.0)"
+        description: "Version to release, without the leading v (e.g. 0.4.0)"
         required: true
 
 permissions:
   contents: write
 
-# Why the steps are in this order: the formula installs a *prebuilt* zip, so it must
-# point at an asset that already exists — the release is published first, its checksum
-# read from the file we just uploaded, and only then is the formula in axklim/homebrew-tap
-# bumped. Nothing is compiled by Homebrew. See Decision 0011.
+# One release at a time: two simultaneous dispatches must not race the tag push and the
+# tap commit against each other.
+concurrency:
+  group: release
+
+# Nothing is committed and nothing is pushed to main. The version is not stored in the
+# tree — it is derived from the tag this workflow pushes (Decision 0013), which is also
+# why this needs no ruleset bypass: main requires a pull request, and a tag push is not
+# subject to a branch rule.
+#
+# Everything that can fail is made to fail before anything is published: the build, the
+# formula's lint and audit, and the tap token's ability to push. Only then are the tag,
+# the release and the formula made public — in that order, because the formula points at
+# a release asset and so the asset has to exist first (Decision 0011).
 jobs:
   release:
     runs-on: macos-15
+    # Set once here and read back as "$VERSION" inside every run: block. Splicing
+    # ${{ inputs.version }} into shell text lets GitHub substitute it before bash parses
+    # anything, so a version containing a quote breaks out and runs arbitrary commands
+    # with this job's contents:write — and, later, TAP_TOKEN — in scope.
+    env:
+      VERSION: ${{ inputs.version }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -25,75 +41,131 @@ jobs:
           fetch-depth: 0
 
       - name: Validate the version and refuse to reuse a tag
+        # If this trips: a formula-only problem needs no new version — render
+        # `make formula VERSION=X.Y.Z SHA256=…` into a tap checkout and push that.
+        # Anything needing a different binary means cutting the next patch version;
+        # deleting a published tag to reuse it is worse than superseding it.
         run: |
           set -euo pipefail
-          V="${{ inputs.version }}"
+          V="$VERSION"
           echo "$V" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$' \
             || { echo "::error::version must be X.Y.Z, got '$V'"; exit 1; }
-          if git rev-parse "v$V" >/dev/null 2>&1; then
+          if git rev-parse -q --verify "refs/tags/v$V" >/dev/null 2>&1; then
             echo "::error::tag v$V already exists"; exit 1
           fi
 
-      - name: Bump the version in its single home
-        run: |
-          set -euo pipefail
-          V="${{ inputs.version }}"
-          F=cli/Sources/MynahCore/MynahVersion.swift
-          sed -i '' "s/current = \".*\"/current = \"$V\"/" "$F"
-          # Trust `make version` over the sed above: if the file's shape ever changes,
-          # this is where we find out, not three steps later in a broken release.
-          test "$(make version)" = "$V" || { echo "::error::make version disagrees"; exit 1; }
+      - name: Install the Nerd Font the icon-coverage test needs
+        # Same reason as in CI: IconFontCoverageTests skips itself when the font is
+        # absent, which would quietly retire the only automated check on the codepoints.
+        run: brew install --cask font-jetbrains-mono-nerd-font
 
       - name: Test and build before tagging anything
+        # The tag this version will be derived from does not exist yet, so nothing in the
+        # tree can name it. MYNAH_VERSION stands in for it here, which is what lets the
+        # assertions below run while failing is still free.
+        env:
+          MYNAH_VERSION: ${{ inputs.version }}
         run: |
           set -euo pipefail
+          V="$VERSION"
+          # If version.sh's shape ever changes, this is where we find out, not three
+          # steps later in a broken release.
+          test "$(make version)" = "$V" || { echo "::error::make version disagrees"; exit 1; }
           make test
           make build
           make app
-          test "$(./cli/.build/release/mynah --version)" = "${{ inputs.version }}"
-
-      - name: Commit the bump and tag it
-        run: |
-          set -euo pipefail
-          V="${{ inputs.version }}"
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          # main may already carry the target version — the constant is bumped in the
-          # PR that adds the feature as often as not. `git commit` exits non-zero with
-          # nothing staged, which under `set -e` would abort the release at the tag.
-          if git diff --quiet HEAD; then
-            echo "MynahVersion.swift is already $V; nothing to commit"
-          else
-            git commit -am "Release v$V"
-          fi
-          git tag -a "v$V" -m "mynah $V"
-          git push origin main
-          git push origin "v$V"
+          # The CLI and the bundle are stamped from the same value, so a disagreement
+          # here means the stamping itself broke.
+          test "$(./cli/.build/release/mynah --version)" = "$V"
+          test "$(/usr/libexec/PlistBuddy -c 'Print CFBundleShortVersionString' \
+            cli/dist/Mynah.app/Contents/Info.plist)" = "$V"
 
       - name: Package the CLI and the app into one zip
         # Two top-level entries on purpose. Homebrew strips a *single* top-level
         # directory when unpacking, and a bare .app IS one — zipping the bundle alone
-        # would unpack into its own Contents. With `mynah` beside it nothing is
-        # stripped, so the formula's `bin.install` / `prefix.install` both find their
-        # artifact. -y keeps symlinks as symlinks rather than copying their targets.
+        # would unpack into its own Contents. With `mynah` beside it nothing is stripped,
+        # so the formula's `bin.install` / `prefix.install` both find their artifact.
+        # -y keeps symlinks as symlinks rather than copying their targets.
+        #
+        # The version comes last in the name so Homebrew can scan it off the URL on a
+        # brew too old to read it from the tag — see packaging/mynah.rb.tmpl.
         run: |
           set -euo pipefail
-          V="${{ inputs.version }}"
+          V="$VERSION"
           mkdir -p dist
           cp cli/.build/release/mynah dist/mynah
           cp -R cli/dist/Mynah.app dist/Mynah.app
-          (cd dist && zip -qry "mynah-$V-arm64.zip" mynah Mynah.app)
-          shasum -a 256 "dist/mynah-$V-arm64.zip" | tee dist/zip-sha256.txt
+          (cd dist && zip -qry "mynah-arm64-$V.zip" mynah Mynah.app)
+          SHA="$(shasum -a 256 "dist/mynah-arm64-$V.zip" | cut -d' ' -f1)"
+          test -n "$SHA"
+          echo "SHA256=$SHA" >> "$GITHUB_ENV"
+          echo "sha256(mynah-arm64-$V.zip) = $SHA"
+
+      - name: Render, lint and audit the formula
+        # Everything brew grades about the formula, graded here where failing is free —
+        # the verify job only reaches `brew audit` once the tag, the release and the tap
+        # commit are already public. The URL is a dead link until the release is
+        # published, but neither `brew style` nor `brew audit` fetches it.
+        run: |
+          set -euo pipefail
+          V="$VERSION"
+          TAP="$(brew --repository)/Library/Taps/local/homebrew-pretap"
+          rm -rf "$TAP"; mkdir -p "$TAP/Formula"
+          make formula VERSION="$V" SHA256="$SHA256" > "$TAP/Formula/mynah.rb"
+          brew style "$TAP/Formula/mynah.rb"
+          brew audit --strict --formula local/pretap/mynah
+
+          # Homebrew scans the version out of the URL rather than being told it, and
+          # style, audit and `ruby -c` all pass on a formula whose version it resolves to
+          # garbage. Only asking brew what it actually resolved catches that.
+          resolved="$(brew info --json=v2 --formula local/pretap/mynah \
+            | jq -r '.formulae[0].versions.stable')"
+          test "$resolved" = "$V" || {
+            echo "::error::formula resolves to version '$resolved', expected '$V'"
+            exit 1
+          }
+          rm -rf "$TAP"
+
+      - name: The tap token can push, before anything is published
+        # The one thing this repository cannot check by reading itself. A read proves
+        # nothing — the tap is public, so an invalid token clones it happily — but a
+        # dry-run push talks to git-receive-pack, which authenticates. Nothing is written.
+        env:
+          TAP_TOKEN: ${{ secrets.TAP_TOKEN }}
+        run: |
+          set -euo pipefail
+          test -n "${TAP_TOKEN:-}" || { echo "::error::TAP_TOKEN is unset or empty"; exit 1; }
+          git clone --depth 1 \
+            "https://x-access-token:$TAP_TOKEN@github.com/axklim/homebrew-tap.git" tap-check || {
+            echo "::error::TAP_TOKEN cannot even read axklim/homebrew-tap — it is expired, revoked or not granted that repository"
+            exit 1
+          }
+          # A malformed token fails the clone above; one that is merely expired or
+          # under-scoped clones the public tap happily and only fails here.
+          git -C tap-check push --dry-run origin HEAD:main || {
+            echo "::error::TAP_TOKEN cannot push to axklim/homebrew-tap — check its expiry and its Contents: Read and write permission"
+            exit 1
+          }
+          rm -rf tap-check
+
+      # Nothing above this line published anything; everything below does.
+      - name: Tag it
+        run: |
+          set -euo pipefail
+          V="$VERSION"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "v$V" -m "mynah $V"
+          git push origin "v$V"
 
       - name: Publish the release
-        # Before the formula bump, not after: the formula points at this asset's URL
-        # and checksum, so the asset has to exist first.
+        # Before the formula bump, not after: the formula points at this asset's URL and
+        # checksum, so the asset has to exist first.
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          V="${{ inputs.version }}"
-          ZIP_SHA="$(cut -d' ' -f1 dist/zip-sha256.txt)"
+          V="$VERSION"
           cat > notes.md <<EOF
           ## Install
 
@@ -102,47 +174,55 @@ jobs:
           \`\`\`
 
           Installs both halves — the \`mynah\` CLI and the \`Mynah.app\` menu bar app — from
-          the prebuilt \`mynah-$V-arm64.zip\` below. Apple silicon only. Needs an
+          the prebuilt \`mynah-arm64-$V.zip\` below. Apple silicon only. Needs an
           authenticated \`claude\` CLI; there is no API key.
 
           Start the menu bar app with \`brew services start mynah\`.
 
-          sha256: \`$ZIP_SHA\`
+          sha256: \`$SHA256\`
           EOF
-          gh release create "v$V" "dist/mynah-$V-arm64.zip" \
+          gh release create "v$V" "dist/mynah-arm64-$V.zip" \
             --title "mynah $V" --notes-file notes.md
 
-      - name: Bump the formula in axklim/homebrew-tap
+      - name: Render the formula into axklim/homebrew-tap
         # GITHUB_TOKEN cannot reach another repository, so this needs TAP_TOKEN — a
         # fine-grained PAT with contents:write on axklim/homebrew-tap.
         env:
           TAP_TOKEN: ${{ secrets.TAP_TOKEN }}
         run: |
           set -euo pipefail
-          V="${{ inputs.version }}"
-          URL="https://github.com/${{ github.repository }}/releases/download/v$V/mynah-$V-arm64.zip"
-          SHA="$(cut -d' ' -f1 dist/zip-sha256.txt)"
-          test -n "$SHA"
+          V="$VERSION"
           git clone "https://x-access-token:$TAP_TOKEN@github.com/axklim/homebrew-tap.git" tap
+          make formula VERSION="$V" SHA256="$SHA256" > tap/Formula/mynah.rb
           cd tap
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          sed -i '' -e "s|^  url \".*\"|  url \"$URL\"|" \
-                    -e "s|^  sha256 \".*\"|  sha256 \"$SHA\"|" \
-                    -e "s|^  version \".*\"|  version \"$V\"|" Formula/mynah.rb
-          # Re-running the workflow for an already-current formula would otherwise fail
-          # here rather than proceeding to the verification below.
+          # add, not commit -a: -a ignores untracked paths, and this file is only tracked
+          # because a previous release created it.
+          git add Formula/mynah.rb
           if git diff --quiet HEAD; then
             echo "formula already points at v$V"
           else
-            git commit -am "fix(mynah): bump to $V"
-            git push origin HEAD:main
+            git commit -m "fix(mynah): bump to $V"
+            # The tag and the release are public by the time this runs, so say how to
+            # finish by hand rather than only that it broke.
+            git push origin HEAD:main || {
+              echo "::error::pushing the formula failed. Finish from a mynah checkout: make formula VERSION=$V SHA256=$SHA256 > <tap>/Formula/mynah.rb"
+              exit 1
+            }
           fi
 
-      - name: Verify a clean install through the tap
-        # The real gate: tap and install exactly what a user gets — the published asset,
-        # through the formula we just pushed. `brew test` asserts `mynah --version`
-        # equals the formula's version, so a botched bump fails here.
+  verify:
+    needs: release
+    runs-on: macos-15
+    permissions: {}
+    env:
+      VERSION: ${{ inputs.version }}
+    steps:
+      - name: Install through the tap exactly as a user would
+        # The real gate: the published asset, through the formula just pushed.
+        # `brew test` asserts `mynah --version` equals the formula's version, so a
+        # botched bump fails here.
         run: |
           set -euo pipefail
           brew tap axklim/tap
@@ -150,3 +230,4 @@ jobs:
           brew install axklim/tap/mynah
           brew test mynah
           brew audit --strict --formula axklim/tap/mynah
+          test "$(mynah --version)" = "$VERSION"

@@ -50,9 +50,11 @@ that delivered them.
   only place the bundle can be built. What made this possible for the app half was a personal-fleet
   constraint (a few Apple-silicon Macs, all mine), so the formula is `arm64`-only and unsigned
   beyond ad-hoc.
-  The `TAP_TOKEN` secret exists and the formula is merged in the tap (2026-08-14).
-  **Remaining:** cut **v0.3.0** — the tap's formula carries placeholder `url`/`sha256` until that
-  run rewrites them. The font question from [[0008-nerd-font-status-icons]] rides along with the
+  The `TAP_TOKEN` secret exists, the formula is merged in the tap, and **v0.3.0** shipped
+  (2026-08-14). The **v0.4.0** run then failed on `git push origin main`: a ruleset now requires a
+  pull request there, and the old workflow's version-bump commit could not land — see
+  [[0013-version-lives-in-the-git-tag]], which moves the version into the git tag so the release
+  pushes only a tag. The font question from [[0008-nerd-font-status-icons]] rides along with the
   app and is still open.
 
 - [x] **Phase 2.3 — Ad-hoc translator (En → Ru)** *(design: [[ad-hoc-translator]])*
@@ -75,9 +77,9 @@ that delivered them.
   follow the source language. Adds `mynah config` and the project's first config file
   ([[0012-xdg-config-language-pair]]). `mynah check` stays English-only.
 
-> **Next up.** Distribution is designed and dry-run verified; it needs the personal account to
-> finish (see Phase 2.2's remaining steps: the `TAP_TOKEN` secret, the tap commit, and the v0.3.0
-> release). Then move to [[Roadmap|Phase 3]]'s polish loop, which can
+> **Next up.** Distribution ships. The release process was rebuilt around the git tag after the
+> v0.4.0 run hit `main`'s new ruleset ([[0013-version-lives-in-the-git-tag]]); re-dispatch Release
+> with `0.4.0` to confirm it end to end. Then move to [[Roadmap|Phase 3]]'s polish loop, which can
 > reuse `TranslationPanel` rather than building a second window. Three translator follow-ups are
 > still open in [[inbox]], one of which (`⌘C` doesn't copy) is shipped behaviour.
 
