@@ -1,3 +1,6 @@
+[![Release](https://github.com/axklim/mynah/actions/workflows/release.yml/badge.svg)](https://github.com/axklim/mynah/actions/workflows/release.yml)
+[![version](https://img.shields.io/github/v/release/mynah/flyspace?label=version)](https://github.com/axklim/mynah/releases)
+
 # Mynah
 
 A native macOS app that helps a non-native English speaker send clear, natural messages —
