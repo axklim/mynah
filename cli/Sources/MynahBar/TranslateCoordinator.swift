@@ -31,7 +31,13 @@ final class TranslateCoordinator {
         self.status = status
         self.makeTranslator = makeTranslator
         var dismissed: (() -> Void)?
-        self.panel = TranslationPanel { dismissed?() }
+        self.panel = TranslationPanel(
+            onDismiss: { dismissed?() },
+            focusGraceSeconds: {
+                (try? MynahConfig.load())?.translationFocusGraceSeconds
+                    ?? MynahConfig.default.translationFocusGraceSeconds
+            }
+        )
         dismissed = { [weak self] in self?.handleDismissal() }
     }
 

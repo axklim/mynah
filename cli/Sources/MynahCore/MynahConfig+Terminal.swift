@@ -15,6 +15,7 @@ public extension MynahConfig {
         source = \(languages.source)
         target = \(languages.target)
         model = \(model)
+        translationFocusGraceSeconds = \(translationFocusGraceSeconds)
         """
     }
 }

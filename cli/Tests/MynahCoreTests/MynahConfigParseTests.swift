@@ -139,6 +139,45 @@ final class MynahConfigParseTests: XCTestCase {
         XCTAssertEqual(config.model, "claude-opus-4-1")
     }
 
+    // MARK: - translationFocusGraceSeconds
+
+    func testDefaultTranslationFocusGraceSecondsIsSixty() throws {
+        let config = try MynahConfig.parse("", path: path)
+        XCTAssertEqual(config.translationFocusGraceSeconds, 60)
+    }
+
+    func testReadsTranslationFocusGraceSeconds() throws {
+        let config = try MynahConfig.parse("translationFocusGraceSeconds = 5", path: path)
+        XCTAssertEqual(config.translationFocusGraceSeconds, 5)
+    }
+
+    func testTranslationFocusGraceSecondsZeroIsAllowed() throws {
+        // 0 reproduces the original instant-close-on-focus-loss behaviour.
+        let config = try MynahConfig.parse("translationFocusGraceSeconds = 0", path: path)
+        XCTAssertEqual(config.translationFocusGraceSeconds, 0)
+    }
+
+    func testNegativeTranslationFocusGraceSecondsIsAnError() {
+        XCTAssertThrowsError(
+            try MynahConfig.parse("translationFocusGraceSeconds = -1", path: path)
+        ) {
+            XCTAssertEqual(($0 as? ConfigError)?.line, 1)
+        }
+    }
+
+    func testNonIntegerTranslationFocusGraceSecondsIsAnError() {
+        XCTAssertThrowsError(
+            try MynahConfig.parse("translationFocusGraceSeconds = soon", path: path)
+        ) {
+            let error = $0 as? ConfigError
+            XCTAssertEqual(error?.line, 1)
+            XCTAssertTrue(
+                error?.reason.contains("translationfocusgraceseconds") == true,
+                "reason was \(error?.reason ?? "nil")"
+            )
+        }
+    }
+
     // MARK: - Error rendering
 
     func testErrorDescriptionNamesPathLineAndReason() {
