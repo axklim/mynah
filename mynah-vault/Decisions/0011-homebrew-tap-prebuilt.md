@@ -54,6 +54,12 @@ a *single* top-level directory when unpacking; with two entries it strips nothin
 
 ## Releasing
 
+> **Amended by [[0013-version-lives-in-the-git-tag]] (2026-08-24).** Steps 2 and 4 below no longer
+> happen: the version is not stored in the tree and nothing is pushed to `main`, because a ruleset
+> now requires a pull request there. The formula is rendered from `packaging/mynah.rb.tmpl` rather
+> than `sed`-patched in the tap, and its explicit `version` line is gone — `brew audit --strict`
+> rejects it as redundant with the version it scans from the URL. Steps 1, 3 and 5–8 stand.
+
 Same workflow, reordered — the formula points at an asset, so the asset must exist first:
 
 1. Validate the version, refuse an existing tag.
@@ -74,7 +80,9 @@ to a critique that read the tap as pointing at a branch instead of the pinned ta
 it installed already pinned the tag's tarball and checksum.)
 
 The formula's `test` block still asserts `mynah --version == version`. That is the one release
-mistake nothing else catches: a tag cut without step 2.
+mistake nothing else catches: an asset that is not the version the formula names. (It used to
+catch a tag cut without step 2; [[0013-version-lives-in-the-git-tag]] made that mistake
+unrepresentable.)
 
 ## Caveats carried into the formula
 

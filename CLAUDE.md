@@ -36,6 +36,7 @@ paste into ChatGPT with a fixed prompt → copy the result back. This app takes 
 | Language / UI   | Swift 6 / SwiftUI + AppKit                                               |
 | Build toolchain | `swift` CLT + `make`, no Xcode project (`make app` bundles the GUI). AppKit/SwiftUI come with the CLT SDK, but **`mynah-bar` still needs full Xcode** — a dependency uses `#Preview`, whose macro plugin is Xcode-only (Decision 0003's correction · Finding `preview-macro-needs-xcode`). The `mynah` CLI is CLT-only. |
 | Distribution    | Homebrew via `axklim/homebrew-tap`, which installs **prebuilt** CLI + app from one release asset — nothing is compiled by brew (Decision 0011; Decision 0010 is the superseded repo-as-tap, CLI-only version) |
+| Versioning      | The git tag is the version's only home; the formula is rendered from `packaging/mynah.rb.tmpl` and the release never pushes to `main` (Decision 0013) |
 | Secrets         | Keychain (future GUI). The CLI evaluator needs no API key — it shells out to an authed `claude -p` (Decision 0006) |
 | Storage         | Local, on-device (message text is sensitive — see Privacy in vault)      |
 | Config          | XDG file at `$XDG_CONFIG_HOME/mynah/config.conf` (fallback `~/.config/mynah/config.conf`); `key = value`, hand-parsed, no dependency (Decision 0012) |
@@ -57,10 +58,15 @@ CLI targets:
   Pass `SWIFT_FLAGS=…` to add `swift build` flags. (Nothing needs it today; the formula stopped
   building from source in Decision 0011.)
 - `make build` / `make uninstall` / `make clean`; bare `make` prints the target list
-- `make version` — print the version. It has **one** home,
-  `cli/Sources/MynahCore/MynahVersion.swift`: `mynah --version` reads it, and `make app`
-  generates `Info.plist` from `Info.plist.in` with it substituted in, so a bump is that one
-  line (release steps in Decision 0011)
+- `make version` — print the version. Its **one** home is the **git tag** (Decision 0013);
+  `scripts/version.sh` resolves it (`MYNAH_VERSION` overrides, then `.git_archival.txt`,
+  else `0.0.0-dev`) and every build stamps that value into both
+  `cli/Sources/MynahCore/MynahVersion.swift` (generated — don't edit or bump it) and the
+  bundle's `Info.plist`. Nothing is bumped by hand; a release is `workflow_dispatch` on
+  Release with the version, and the workflow tags without ever pushing to `main`
+- `make formula VERSION=X.Y.Z SHA256=…` — render `packaging/mynah.rb.tmpl` into the
+  Homebrew formula. The release workflow renders it into `axklim/homebrew-tap`; CI lints
+  and audits it on every PR
 - Dev without installing: `cd cli && swift run mynah check "some text"`
 - Run it: `mynah check "<text>"` (or `pbpaste | mynah check`) → one verdict 🔴/🟡/🟢
 - Translate it: `mynah translate "<text>"` (or `pbpaste | mynah translate`) — between the

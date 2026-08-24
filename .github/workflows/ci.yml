@@ -40,6 +40,10 @@ jobs:
       - name: Build the app bundle
         run: make app
 
+      # On a branch this is "0.0.0-dev" everywhere — the version's home is the git tag
+      # (Decision 0013) and a checkout has no tag to speak of. The value is not the point:
+      # that all three agree is what proves the stamping pipeline still works, and that is
+      # what a release depends on when the value is real.
       - name: Version is consistent across the binary and the bundle
         run: |
           set -euo pipefail
@@ -51,6 +55,31 @@ jobs:
           test "$binary" = "$expected"
           test "$bundle" = "$expected"
 
-  # There is no formula job any more: the formula moved to axklim/homebrew-tap
-  # (Decision 0011), and the release workflow audits it there against the asset it
-  # just published — which is stronger than linting a copy that never gets installed.
+      # The release workflow renders this same template into axklim/homebrew-tap, where a
+      # syntax slip or a lint regression only surfaces after the tag and the release are
+      # already public. Graded here instead, on a placeholder checksum — neither `brew
+      # style` nor `brew audit` fetches the URL.
+      - name: The Homebrew formula still renders, lints and audits
+        run: |
+          set -euo pipefail
+          V=9.9.9
+          TAP="$(brew --repository)/Library/Taps/local/homebrew-pretap"
+          rm -rf "$TAP"; mkdir -p "$TAP/Formula"
+          make formula VERSION="$V" SHA256="$(printf '0%.0s' $(seq 64))" \
+            > "$TAP/Formula/mynah.rb"
+          brew style "$TAP/Formula/mynah.rb"
+          brew audit --strict --formula local/pretap/mynah
+          # Homebrew scans the version out of the URL rather than being told it, so a
+          # formula that passes every other check can still resolve to garbage.
+          resolved="$(brew info --json=v2 --formula local/pretap/mynah \
+            | jq -r '.formulae[0].versions.stable')"
+          test "$resolved" = "$V" || {
+            echo "::error::formula resolves to version '$resolved', expected '$V'"
+            exit 1
+          }
+          rm -rf "$TAP"
+
+  # There is no separate formula job: the formula's template lives here (Decision 0013)
+  # and is graded in the step above, while the release workflow audits the rendered result
+  # against the asset it just published — which is stronger than linting a copy that never
+  # gets installed.

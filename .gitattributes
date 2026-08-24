@@ -1,0 +1,4 @@
+# `git archive` — which is what GitHub runs to build the tag tarball — expands the
+# $Format: placeholder in this file to the tag name. That is how a build knows its own
+# version without the version ever being written into the tree. See scripts/version.sh.
+.git_archival.txt export-subst

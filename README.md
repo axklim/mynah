@@ -1,5 +1,5 @@
 [![Release](https://github.com/axklim/mynah/actions/workflows/release.yml/badge.svg)](https://github.com/axklim/mynah/actions/workflows/release.yml)
-[![version](https://img.shields.io/github/v/release/mynah/flyspace?label=version)](https://github.com/axklim/mynah/releases)
+[![version](https://img.shields.io/github/v/release/axklim/mynah?label=version)](https://github.com/axklim/mynah/releases)
 
 # Mynah
 

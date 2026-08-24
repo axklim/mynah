@@ -7,12 +7,12 @@ APP    := Mynah
 APPBIN := mynah-bar
 APPDIR := $(PKGDIR)/dist/$(APP).app
 PLISTIN := $(PKGDIR)/packaging/Info.plist.in
-VERSFILE := $(PKGDIR)/Sources/MynahCore/MynahVersion.swift
 
-# The version has exactly one home: MynahVersion.swift. The app bundle's Info.plist is
-# generated from Info.plist.in with this substituted in, so the binary and the bundle can
-# never disagree — a version bump is one line in that Swift file.
-VERSION := $(shell sed -n 's/.*static let current = "\(.*\)".*/\1/p' $(VERSFILE))
+# The version's home is the git tag, not a file in the tree — scripts/version.sh explains
+# how it gets from there to here, and MYNAH_VERSION overrides it. Every build stamps that
+# one value into both MynahVersion.swift and the bundle's Info.plist, so the binary and
+# the bundle can never disagree. Nothing is bumped by hand. See Decision 0013.
+VERSION = $(shell scripts/version.sh)
 
 # Extra flags for `swift build`. Empty for normal development — SwiftPM's own sandbox
 # around manifest compilation is worth keeping locally. The Homebrew formula passes
@@ -20,7 +20,7 @@ VERSION := $(shell sed -n 's/.*static let current = "\(.*\)".*/\1/p' $(VERSFILE)
 # sandbox-exec fails with "Invalid manifest".
 SWIFT_FLAGS ?=
 
-.PHONY: help build test install uninstall clean app run-app version
+.PHONY: help build test install uninstall clean app run-app version stamp formula
 .DEFAULT_GOAL := help
 
 help:
@@ -32,7 +32,8 @@ help:
 	@echo "  make clean       remove build artifacts"
 	@echo "  make app         build the menu-bar app bundle (dist/Mynah.app)"
 	@echo "  make run-app     build the app bundle and open it"
-	@echo "  make version     print the version (single source: MynahVersion.swift)"
+	@echo "  make version     print the version (single source: the git tag)"
+	@echo "  make formula     render the Homebrew formula (needs VERSION= and SHA256=)"
 
 version:
 	@echo $(VERSION)
@@ -40,11 +41,21 @@ version:
 # Scoped to the CLI product on purpose. Building every target here would also compile
 # MynahBar and its KeyboardShortcuts dependency, which needs full Xcode (see the vault
 # Finding preview-macro-needs-xcode) — the CLI itself builds with the CLT alone.
-build:
+build: stamp
 	cd $(PKGDIR) && swift build -c release --product $(BIN) $(SWIFT_FLAGS)
 
-test:
+test: stamp
 	cd $(PKGDIR) && swift test
+
+# Write the resolved version into MynahVersion.swift. A no-op when it already says that,
+# so it costs no rebuild.
+stamp:
+	@scripts/stamp-version.sh
+
+# Render the Homebrew formula. SHA256 is the checksum of the release asset, so only the
+# release workflow has a real one to pass.
+formula:
+	@scripts/render-formula.sh $(VERSION) $(SHA256)
 
 install: build
 	mkdir -p $(BINDIR)
@@ -62,8 +73,8 @@ uninstall:
 	rm -f $(BINDIR)/$(BIN)
 	@echo "removed $(BINDIR)/$(BIN)"
 
-app: ## build the menu-bar app bundle (dist/Mynah.app)
-	@test -n "$(VERSION)" || { echo "error: no version parsed from $(VERSFILE)"; exit 1; }
+app: stamp ## build the menu-bar app bundle (dist/Mynah.app)
+	@test -n "$(VERSION)" || { echo "error: scripts/version.sh printed nothing"; exit 1; }
 	cd $(PKGDIR) && swift build -c release --product $(APPBIN) $(SWIFT_FLAGS)
 	rm -rf $(APPDIR)
 	mkdir -p $(APPDIR)/Contents/MacOS
