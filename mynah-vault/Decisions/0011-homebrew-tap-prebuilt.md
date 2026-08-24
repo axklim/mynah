@@ -58,7 +58,10 @@ a *single* top-level directory when unpacking; with two entries it strips nothin
 > happen: the version is not stored in the tree and nothing is pushed to `main`, because a ruleset
 > now requires a pull request there. The formula is rendered from `packaging/mynah.rb.tmpl` rather
 > than `sed`-patched in the tap, and its explicit `version` line is gone — `brew audit --strict`
-> rejects it as redundant with the version it scans from the URL. Steps 1, 3 and 5–8 stand.
+> rejects it as redundant with the version it scans from the URL. The asset is renamed
+> `mynah-arm64-<version>.zip` (version **last**), because a brew older than 2026-07-28 scans the
+> filename rather than the tag and reads `mynah-<v>-arm64.zip` as version `64`. Steps 1, 3 and
+> 5–8 otherwise stand.
 
 Same workflow, reordered — the formula points at an asset, so the asset must exist first:
 

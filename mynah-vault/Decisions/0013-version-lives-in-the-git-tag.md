@@ -68,7 +68,7 @@ Everything that can fail is made to fail *before* anything is public:
 1. Validate the version; refuse an existing tag (`git rev-parse -q --verify refs/tags/vX`).
 2. `make test && make build && make app` with `MYNAH_VERSION` set; assert the CLI **and** the
    bundle both report it.
-3. Zip `mynah` + `Mynah.app`; take the sha256 of the asset we just built.
+3. Zip `mynah` + `Mynah.app` into `mynah-arm64-<version>.zip`; take its sha256.
 4. Render the formula against that real checksum; `brew style`, `brew audit --strict`, and ask
    `brew info --json` what version it *resolved* — the one thing style and audit cannot catch.
 5. Prove `TAP_TOKEN` can push, with `git push --dry-run`. A read proves nothing: the tap is
@@ -97,11 +97,34 @@ Two smaller fixes came with it, both borrowed from flyspace:
 * Stable: `version 0.4.0` is redundant with version scanned from URL
 ```
 
-Homebrew's scanner reads `0.4.0` out of `…/download/v0.4.0/mynah-0.4.0-arm64.zip` on its own.
-[[0011-homebrew-tap-prebuilt]] added that line believing an asset URL could not be scanned; it can.
-The line is gone from the template, and step 4's `brew info --json` check is what keeps the
-scanner honest. This would have failed the *last* step of the next release either way — after the
-tag and the release were already public.
+Homebrew scans the version off the URL on its own. [[0011-homebrew-tap-prebuilt]] added that line
+believing an asset URL could not be scanned; it can. The line is gone from the template — and
+this would have failed the *last* step of the next release either way, after the tag and the
+release were already public.
+
+**Then the `brew info --json` check earned its keep on the first CI run.** It failed with
+
+```
+::error::formula resolves to version '64', expected '9.9.9'
+```
+
+— on the runner, not on the dev machine, where the same command resolved `9.9.9`. Homebrew reads
+the version out of the *tag* (`…/releases/download/v9.9.9/…`) only since **2026-07-28**
+(`bae7b0408a`, "Fix GitHub release version detection"). An older brew falls through to the
+filename rules, and on `mynah-9.9.9-arm64.zip` those take the **`64` out of `arm64`**.
+
+Isolating the filename rules (a tag the new rule cannot match, so both brews take the same path):
+
+| asset name | resolves to |
+|---|---|
+| `mynah-0.4.0-arm64.zip` | **`64`** |
+| `mynah-0.4.0.zip` | `0.4.0` |
+| `mynah-arm64-0.4.0.zip` | `0.4.0` |
+
+So the release asset is now **`mynah-arm64-<version>.zip`** — arch first, version last. That keeps
+the arch in the name (which is the point of having it) and resolves correctly on old *and* new
+brew, rather than depending on which Homebrew the machine happens to carry. The rename is
+load-bearing, not cosmetic; the comment in `packaging/mynah.rb.tmpl` says so.
 
 ## Consequences
 

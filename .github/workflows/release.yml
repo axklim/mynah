@@ -86,17 +86,20 @@ jobs:
         # would unpack into its own Contents. With `mynah` beside it nothing is stripped,
         # so the formula's `bin.install` / `prefix.install` both find their artifact.
         # -y keeps symlinks as symlinks rather than copying their targets.
+        #
+        # The version comes last in the name so Homebrew can scan it off the URL on a
+        # brew too old to read it from the tag — see packaging/mynah.rb.tmpl.
         run: |
           set -euo pipefail
           V="$VERSION"
           mkdir -p dist
           cp cli/.build/release/mynah dist/mynah
           cp -R cli/dist/Mynah.app dist/Mynah.app
-          (cd dist && zip -qry "mynah-$V-arm64.zip" mynah Mynah.app)
-          SHA="$(shasum -a 256 "dist/mynah-$V-arm64.zip" | cut -d' ' -f1)"
+          (cd dist && zip -qry "mynah-arm64-$V.zip" mynah Mynah.app)
+          SHA="$(shasum -a 256 "dist/mynah-arm64-$V.zip" | cut -d' ' -f1)"
           test -n "$SHA"
           echo "SHA256=$SHA" >> "$GITHUB_ENV"
-          echo "sha256(mynah-$V-arm64.zip) = $SHA"
+          echo "sha256(mynah-arm64-$V.zip) = $SHA"
 
       - name: Render, lint and audit the formula
         # Everything brew grades about the formula, graded here where failing is free —
@@ -171,14 +174,14 @@ jobs:
           \`\`\`
 
           Installs both halves — the \`mynah\` CLI and the \`Mynah.app\` menu bar app — from
-          the prebuilt \`mynah-$V-arm64.zip\` below. Apple silicon only. Needs an
+          the prebuilt \`mynah-arm64-$V.zip\` below. Apple silicon only. Needs an
           authenticated \`claude\` CLI; there is no API key.
 
           Start the menu bar app with \`brew services start mynah\`.
 
           sha256: \`$SHA256\`
           EOF
-          gh release create "v$V" "dist/mynah-$V-arm64.zip" \
+          gh release create "v$V" "dist/mynah-arm64-$V.zip" \
             --title "mynah $V" --notes-file notes.md
 
       - name: Render the formula into axklim/homebrew-tap

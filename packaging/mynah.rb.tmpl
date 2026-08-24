@@ -4,9 +4,14 @@ class Mynah < Formula
   desc "Rate how clearly a message reads, and translate via Claude"
   homepage "https://github.com/axklim/mynah"
   # No `version` line: Homebrew scans "@VERSION@" out of this URL, and `brew audit
-  # --strict` rejects restating what it already scanned. The release workflow asks brew
-  # what it resolved and fails if that is not the version being released.
-  url "https://github.com/axklim/mynah/releases/download/v@VERSION@/mynah-@VERSION@-arm64.zip"
+  # --strict` rejects restating what it already scanned. CI and the release workflow both
+  # ask brew what it actually resolved and fail if that is not the version being released.
+  #
+  # The version comes *last* in the filename, and that is load-bearing. Reading it from
+  # the tag was only fixed in Homebrew on 2026-07-28 (bae7b0408a); an older brew falls
+  # through to the filename rules, and on `mynah-@VERSION@-arm64.zip` those grab the "64"
+  # out of "arm64". With the arch first, old and new brew both resolve @VERSION@.
+  url "https://github.com/axklim/mynah/releases/download/v@VERSION@/mynah-arm64-@VERSION@.zip"
   sha256 "@SHA256@"
 
   # Both artifacts are prebuilt by CI on an Apple silicon runner: the app half needs
